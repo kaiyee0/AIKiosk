@@ -49,6 +49,9 @@ using Windows.Media.MediaProperties;
 using Windows.System.Threading;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.Storage.Pickers;
+using Windows.Storage.Streams;
+using Windows.Storage;
 
 // The User Control item template is documented at http://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -142,9 +145,7 @@ namespace IntelligentKioskSample.Controls
         {
             try
             {
-                if (captureManager == null ||
-                    captureManager.CameraStreamState == CameraStreamState.Shutdown ||
-                    captureManager.CameraStreamState == CameraStreamState.NotStreaming)
+                if (captureManager == null || captureManager.CameraStreamState == CameraStreamState.Shutdown || captureManager.CameraStreamState == CameraStreamState.NotStreaming)
                 {
                     if (captureManager != null)
                     {
@@ -338,7 +339,15 @@ namespace IntelligentKioskSample.Controls
                             else
                             {
                                 // only age and gender available
-                                faceBorder.ShowIdentificationData(detectedFace.FaceAttributes.Age, detectedFace.FaceAttributes.Gender, 0, null, uniqueId: uniqueId);
+                                if (string.Compare(detectedFace.FaceAttributes.Gender, "male", StringComparison.OrdinalIgnoreCase) == 0)
+                                {
+                                    faceBorder.ShowIdentificationData(detectedFace.FaceAttributes.Age, detectedFace.FaceAttributes.Gender, 0, "X先生", uniqueId: uniqueId);
+                                }
+                                else
+                                {
+                                    faceBorder.ShowIdentificationData(detectedFace.FaceAttributes.Age, detectedFace.FaceAttributes.Gender, 0, "Y女士", uniqueId: uniqueId);
+                                }
+                                    //faceBorder.ShowIdentificationData(detectedFace.FaceAttributes.Age, detectedFace.FaceAttributes.Gender, 0,"Unknown", uniqueId: uniqueId);
                             }
                         }
                         else if (identifiedPerson != null && identifiedPerson.Person != null)
@@ -524,7 +533,7 @@ namespace IntelligentKioskSample.Controls
                     {
                         ImageAnalyzer imageWithFace = new ImageAnalyzer(await Util.GetPixelBytesFromSoftwareBitmapAsync(previewFrame));
 
-                        imageWithFace.ShowDialogOnFaceApiErrors = this.ShowDialogOnApiErrors;
+                        //imageWithFace.ShowDialogOnFaceApiErrors = this.ShowDialogOnApiErrors;
                         imageWithFace.FilterOutSmallFaces = this.FilterOutSmallFaces;
                         imageWithFace.UpdateDecodedImageSize(this.CameraResolutionHeight, this.CameraResolutionWidth);
 
@@ -536,7 +545,7 @@ namespace IntelligentKioskSample.Controls
             {
                 if (this.ShowDialogOnApiErrors)
                 {
-                    await Util.GenericApiCallExceptionHandler(ex, "Error capturing photo.");
+                    //await Util.GenericApiCallExceptionHandler(ex, "Error capturing photo.");
                 }
             }
             finally
@@ -545,6 +554,103 @@ namespace IntelligentKioskSample.Controls
             }
 
             return null;
+        }
+
+        public async Task<ImageAnalyzer> myCaptureFrameAsync()
+        {
+            try
+            {
+                if (!(await this.frameProcessingSemaphore.WaitAsync(250)))
+                {
+                    return null;
+                }
+
+                // Capture a frame from the preview stream
+                var videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, CameraResolutionWidth, CameraResolutionHeight);
+                using (var currentFrame = await captureManager.GetPreviewFrameAsync(videoFrame))
+                {
+                    using (SoftwareBitmap previewFrame = currentFrame.SoftwareBitmap)
+                    {
+                        SoftwareBitmap imgBits = SoftwareBitmap.Convert(previewFrame, BitmapPixelFormat.Bgra8);
+                        FileSavePicker fileSavePicker = new FileSavePicker();
+                        fileSavePicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+                        fileSavePicker.FileTypeChoices.Add("JPEG files", new List<string>() { ".jpg" });
+                        fileSavePicker.SuggestedFileName = "image";
+
+                        var outputFile = await fileSavePicker.PickSaveFileAsync();
+                        if (outputFile != null)
+                        {
+                            //reject as user cancel saving
+                            SaveSoftwareBitmapToFile(imgBits, outputFile);
+                        }
+
+                        ImageAnalyzer imageWithFace = new ImageAnalyzer(await Util.GetPixelBytesFromSoftwareBitmapAsync(previewFrame));
+
+                        //imageWithFace.ShowDialogOnFaceApiErrors = this.ShowDialogOnApiErrors;
+                        imageWithFace.FilterOutSmallFaces = this.FilterOutSmallFaces;
+                        imageWithFace.UpdateDecodedImageSize(this.CameraResolutionHeight, this.CameraResolutionWidth);
+
+                        return imageWithFace;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                if (this.ShowDialogOnApiErrors)
+                {
+                    //await Util.GenericApiCallExceptionHandler(ex, "Error capturing photo.");
+                }
+            }
+            finally
+            {
+                this.frameProcessingSemaphore.Release();
+            }
+
+            return null;
+        }
+
+        private async void SaveSoftwareBitmapToFile(SoftwareBitmap softwareBitmap, StorageFile outputFile)
+        {
+            using (IRandomAccessStream stream = await outputFile.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                // Create an encoder with the desired format
+                BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+
+                // Set the software bitmap
+                encoder.SetSoftwareBitmap(softwareBitmap);
+
+                // Set additional encoding parameters, if needed
+                //encoder.BitmapTransform.ScaledWidth = 320;
+                //encoder.BitmapTransform.ScaledHeight = 240;
+                //encoder.BitmapTransform.Rotation = Windows.Graphics.Imaging.BitmapRotation.Clockwise90Degrees;
+                //encoder.BitmapTransform.InterpolationMode = BitmapInterpolationMode.Fant;
+                encoder.IsThumbnailGenerated = true;
+
+                try
+                {
+                    await encoder.FlushAsync();
+                }
+                catch (Exception err)
+                {
+                    switch (err.HResult)
+                    {
+                        case unchecked((int)0x88982F81): //WINCODEC_ERR_UNSUPPORTEDOPERATION
+                                                         // If the encoder does not support writing a thumbnail, then try again
+                                                         // but disable thumbnail generation.
+                            encoder.IsThumbnailGenerated = false;
+                            break;
+                        default:
+                            throw err;
+                    }
+                }
+
+                if (encoder.IsThumbnailGenerated == false)
+                {
+                    await encoder.FlushAsync();
+                }
+
+
+            }
         }
 
         private void OnImageCaptured(ImageAnalyzer imageWithFace)
@@ -580,6 +686,7 @@ namespace IntelligentKioskSample.Controls
             if (this.cameraControlSymbol.Symbol == Symbol.Camera)
             {
                 var img = await CaptureFrameAsync();
+                //var img = await myCaptureFrameAsync();
                 if (img != null)
                 {
                     this.cameraControlSymbol.Symbol = Symbol.Refresh;

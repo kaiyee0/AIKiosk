@@ -119,7 +119,7 @@
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
                     <FontIcon x:Name="Glyph" Grid.Column="0" FontSize="16" Glyph="&#xE0D5;" MirroredWhenRightToLeft="True" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                    <TextBlock x:Name="Text" Grid.Column="1" Style="{ThemeResource BodyTextBlockStyle}" Text="Back" VerticalAlignment="Center" />
+                    <TextBlock x:Name="Text" Grid.Column="1" Style="{ThemeResource BodyTextBlockStyle}" Text="上一頁" VerticalAlignment="Center" />
                 </Grid>
             </Setter.Value>
         </Setter>

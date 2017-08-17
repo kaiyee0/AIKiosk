@@ -56,35 +56,35 @@ namespace IntelligentKioskSample.Controls
             switch (topEmotion.EmotionName)
             {
                 case "Anger":
-                    label = "Angry";
+                    label = "憤怒";
                     emoji = "\U0001f620";
                     break;
                 case "Contempt":
-                    label = "Contemptuous";
+                    label = "鄙視";
                     emoji = "\U0001f612";
                     break;
                 case "Disgust":
-                    label = "Disgusted";
+                    label = "噁心";
                     emoji = "\U0001f627";
                     break;
                 case "Fear":
-                    label = "Afraid";
+                    label = "害怕";
                     emoji = "\U0001f628";
                     break;
                 case "Happiness":
-                    label = "Happy";
+                    label = "開心";
                     emoji = "\U0001f60a";
                     break;
                 case "Neutral":
-                    label = "Neutral";
+                    label = "無表情";
                     emoji = "\U0001f614";
                     break;
                 case "Sadness":
-                    label = "Sad";
+                    label = "哀傷";
                     emoji = "\U0001f622";
                     break;
                 case "Surprise":
-                    label = "Surprised";
+                    label = "驚喜";
                     emoji = "\U0001f632";
                     break;
                 default:

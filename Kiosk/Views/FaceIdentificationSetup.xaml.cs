@@ -1,4 +1,4 @@
-ï»¿// 
+// 
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license.
 // 
@@ -81,7 +81,7 @@ namespace IntelligentKioskSample.Views
             if (this.needsTraining)
             {
                 e.Cancel = true;
-                await Util.ConfirmActionAndExecute("It looks like you made modifications but didn't train the model afterwards. Would you like to train now?", async () => await this.TrainGroupsAsync());
+                await Util.ConfirmActionAndExecute("±z©|¥¼­«·s¾ã²z(°V½m)±zªº¤Hª«¸s²Õ¡C±z¬O§_·Q­n²{¦b­«¾ã?", async () => await this.TrainGroupsAsync());
             }
 
             base.OnNavigatingFrom(e);
@@ -106,7 +106,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Failure loading Person Groups");
+                await Util.GenericApiCallExceptionHandler(ex, "¸ü¤J¤Hª«¸s²Õ¥¢±Ñ¡C");
             }
 
             this.progressControl.IsActive = false;
@@ -118,7 +118,7 @@ namespace IntelligentKioskSample.Views
             {
                 if (string.IsNullOrEmpty(SettingsHelper.Instance.WorkspaceKey))
                 {
-                    throw new InvalidOperationException("Before you can create groups you need to define a Workspace Key in the Settings Page.");
+                    throw new InvalidOperationException("¦b±z³Ð«Ø¤Hª«¸s²Õ¤§«e¡A±z»Ý­n¥ý¦b³]©w­¶­±¤¤©w¸q±zªº¤u§@¯¸ª÷Æ_¡C");
                 }
 
                 Guid personGroupGuid = Guid.NewGuid();
@@ -135,7 +135,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Failure creating group");
+                await Util.GenericApiCallExceptionHandler(ex, "³Ð«Ø¤Hª«¸s²Õ¥¢±Ñ¡C");
             }
         }
 
@@ -147,7 +147,7 @@ namespace IntelligentKioskSample.Views
 
         private async void OnDeletePersonGroupClicked(object sender, RoutedEventArgs e)
         {
-            await Util.ConfirmActionAndExecute("Delete person group?", async () => { await DeletePersonGroupAsync(); });
+            await Util.ConfirmActionAndExecute("½T»{²¾°£¤Hª«¸s²Õ?", async () => { await DeletePersonGroupAsync(); });
         }
 
         private async Task DeletePersonGroupAsync()
@@ -162,7 +162,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Failure deleting person group");
+                await Util.GenericApiCallExceptionHandler(ex, "²¾°£¤Hª«¸s²Õ¥¢±Ñ¡C");
             }
         }
 
@@ -207,7 +207,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception e)
             {
-                await Util.GenericApiCallExceptionHandler(e, "Failure loading people in the group");
+                await Util.GenericApiCallExceptionHandler(e, "¸ü¤J¤Hª«¥¢±Ñ¡C");
             }
         }
 
@@ -268,13 +268,13 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception e)
             {
-                await Util.GenericApiCallExceptionHandler(e, "Failure creating person");
+                await Util.GenericApiCallExceptionHandler(e, "³Ð«Ø¤Hª«¥¢±Ñ¡Cn");
             }
         }
 
         private async void OnDeletePersonClicked(object sender, RoutedEventArgs e)
         {
-            await Util.ConfirmActionAndExecute("Delete person?", async () => { await DeletePersonAsync(); });
+            await Util.ConfirmActionAndExecute("½T»{²¾°£¤Hª«?", async () => { await DeletePersonAsync(); });
         }
 
         private async Task DeletePersonAsync()
@@ -286,7 +286,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Failure deleting person");
+                await Util.GenericApiCallExceptionHandler(ex, "²¾°£¤Hª«¥¢±Ñ¡C");
             }
         }
 
@@ -317,7 +317,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception e)
             {
-                await Util.GenericApiCallExceptionHandler(e, "Failure downloading person faces");
+                await Util.GenericApiCallExceptionHandler(e, "µLªk¸ü¤J¤Hª«ªºÁy¡C");
             }
 
             this.progressControl.IsActive = false;
@@ -375,7 +375,7 @@ namespace IntelligentKioskSample.Views
 
             if (foundError)
             {
-                await Util.GenericApiCallExceptionHandler(lastError, "Failure adding one or more of the faces");
+                await Util.GenericApiCallExceptionHandler(lastError, "¼W¥[¤@©Î¦h­ÓÁy¤Õ®Éµo¥Í¿ù»~¡C");
             }
 
             this.progressControl.IsActive = false;
@@ -401,7 +401,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Failure deleting images");
+                await Util.GenericApiCallExceptionHandler(ex, "²¾°£·Ó¤ù¼v¹³¥¢±Ñ¡C");
             }
         }
 
@@ -492,7 +492,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Failure during batch processing");
+                await Util.GenericApiCallExceptionHandler(ex, "¦b³B²z¹Lµ{¤¤µo¥Í¿ù»~¡A½Ðµy«á¦A¸Õ¡C");
             }
 
             this.progressControl.IsActive = false;
@@ -505,7 +505,7 @@ namespace IntelligentKioskSample.Views
 
         private async void OnSelectFolderButtonClicked(object sender, RoutedEventArgs e)
         {
-            await Util.ConfirmActionAndExecute("Please select a root folder to start. The subfolder names will map to people names, and the photos inside those folders will map to their sample photos. Continue?", async () => { await PickFolderASync(); });
+            await Util.ConfirmActionAndExecute("½Ð¿ï©w¤@­Ó¥À¸ê®Æ§¨§@¬°°_©l¡C¨ä¤l¸ê®Æ§¨ªº¦W¦r±N·|¹ïÀ³¨ì¤Hª«ªº¦W¦r¡C¡A¦Ó¨ä¤¤¸ê®Æ§¨ªº·Ó¤ù±N·|¹ïÀ³¨ì¤Hª«ªº½d¨Ò·Ó¤ù¡C½T»{­nÄ~Äò¶Ü?", async () => { await PickFolderASync(); });
         }
 
         private async Task PickFolderASync()
@@ -525,7 +525,7 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Error picking the target folder.");
+                await Util.GenericApiCallExceptionHandler(ex, "¿ï¨ú¥Ø¼Ð¸ê®Æ§¨®Éµo¥Í¿ù»~¡C");
             }
         }
 
@@ -577,12 +577,12 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Failure processing the folder and files");
+                await Util.GenericApiCallExceptionHandler(ex, "¦b³B²z¸ê®Æ§¨©MÀÉ®×®Éµo¥Í¿ù»~¡C");
             }
 
             if (errors.Any())
             {
-                await new MessageDialog(string.Join("\n", errors), "Failure importing the folllowing photos").ShowAsync();
+                await new MessageDialog(string.Join("\n", errors), "¤Þ¤J·Ó¤ù¥¢±Ñ¡C").ShowAsync();
             }
 
             this.progressControl.IsActive = false;
@@ -629,14 +629,14 @@ namespace IntelligentKioskSample.Views
             }
             catch (Exception ex)
             {
-                await Util.GenericApiCallExceptionHandler(ex, "Failure requesting training");
+                await Util.GenericApiCallExceptionHandler(ex, "­«¾ã(°V½m)®Éµo¥Í¿ù»~¡C");
             }
 
             this.progressControl.IsActive = false;
 
             if (!trainingSucceeded)
             {
-                await new MessageDialog("Training failed. Make sure you have at least one person per group and at least one face per person.").ShowAsync();
+                await new MessageDialog("­«¾ã(°V½m)¥¢±Ñ¡C½Ð½T»{¦b¨C¤@­Ó¤Hª«¸s²Õ¤¤¦Ü¤Ö¦³¤@¦W¤Hª«¥B¨C¤@­Ó¤Hª«¦Ü¤Ö¾Ö¦³¤@±i½d¥»ªºÁy¤Õ¡C").ShowAsync();
             }
         }
 

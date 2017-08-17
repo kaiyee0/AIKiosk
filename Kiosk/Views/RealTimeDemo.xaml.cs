@@ -34,8 +34,13 @@
 using IntelligentKioskSample.Controls;
 using Microsoft.ProjectOxford.Common.Contract;
 using Microsoft.ProjectOxford.Face.Contract;
+using Newtonsoft.Json;
+
 using ServiceHelpers;
 using System;
+using System.Diagnostics;
+using System.Text;
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -46,6 +51,18 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Media;
+using WeatherAssignment;
+
+#region using for Text to Speech
+using System.IO;
+using Windows.Media;
+using System.Threading;
+using CognitiveServicesTTS;
+using Windows.UI.Core;
+using Windows.Media.SpeechSynthesis;
+using Windows.ApplicationModel.Resources.Core;
+#endregion
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -54,7 +71,7 @@ namespace IntelligentKioskSample.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    [KioskExperience(Title = "Realtime Crowd Insights", ImagePath = "ms-appx:/Assets/realtime.png", ExperienceType = ExperienceType.Kiosk)]
+    [KioskExperience(Title = "即時群眾人臉分析", ImagePath = "ms-appx:/Assets/realtime.png", ExperienceType = ExperienceType.Kiosk)]
     public sealed partial class RealTimeDemo : Page, IRealTimeDataProvider
     {
         private Task processingLoopTask;
@@ -69,17 +86,39 @@ namespace IntelligentKioskSample.Views
         private DemographicsData demographics;
         private Dictionary<Guid, Visitor> visitors = new Dictionary<Guid, Visitor>();
 
+        private int starving_count;
+        private int last_latency;
+        private int cur_latency;
+        private static string deviceName;
+
+        private SpeechSynthesizer synthesizer;
+
+        Authentication auth = new Authentication("475623a6b9fc456d904015983b13ba40");
+        Synthesize cortana = new Synthesize();
+
+        public static string DeviceName
+        {
+            get { return deviceName; }
+            set
+            {
+                deviceName = value;
+            }
+        }
+
         public RealTimeDemo()
         {
             this.InitializeComponent();
-
             this.DataContext = this;
 
             Window.Current.Activated += CurrentWindowActivationStateChanged;
-            this.cameraControl.SetRealTimeDataProvider(this);
-            this.cameraControl.FilterOutSmallFaces = true;
-            this.cameraControl.HideCameraControls();
-            this.cameraControl.CameraAspectRatioChanged += CameraControl_CameraAspectRatioChanged;
+            this.saveControl.SetRealTimeDataProvider(this);
+            this.saveControl.FilterOutSmallFaces = true;
+            //this.cameraControl.HideCameraControls();
+            this.saveControl.CameraAspectRatioChanged += CameraControl_CameraAspectRatioChanged;
+            synthesizer = new SpeechSynthesizer();
+            starving_count = 0;
+            last_latency = -1;
+            cur_latency = -2;
         }
 
         private void CameraControl_CameraAspectRatioChanged(object sender, EventArgs e)
@@ -114,18 +153,43 @@ namespace IntelligentKioskSample.Views
                         }
 
                         this.isProcessingPhoto = true;
-                        if (this.cameraControl.NumFacesOnLastFrame == 0)
+                        last_latency = cur_latency;
+                        this.starving_count = 0;
+                        if (this.saveControl.NumFacesOnLastFrame == 0)
                         {
                             await this.ProcessCameraCapture(null);
                         }
                         else
                         {
-                            await this.ProcessCameraCapture(await this.cameraControl.CaptureFrameAsync());
+                            try
+                            {
+                                await this.ProcessCameraCapture(await this.saveControl.CaptureFrameAsync());
+                            }
+                            catch(NullReferenceException e)
+                            {
+                                //ignore 
+                                //await new MessageDialog("Error.", "Missing API Key").ShowAsync();
+                                if (e.Source != null)
+                                    this.debugText.Text = string.Format("NullRefenrenceException source: {0}", e.Source);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (this.last_latency == this.cur_latency)
+                        {
+                            this.starving_count++;
+                        }
+                        if(this.starving_count > 7)
+                        {
+                            cur_latency = -1;
+                            this.isProcessingPhoto = false;
+
                         }
                     }
                 });
 
-                await Task.Delay(1000);
+                await Task.Delay(2000);
             }
         }
 
@@ -133,11 +197,11 @@ namespace IntelligentKioskSample.Views
         {
             if ((e.WindowActivationState == Windows.UI.Core.CoreWindowActivationState.CodeActivated ||
                 e.WindowActivationState == Windows.UI.Core.CoreWindowActivationState.PointerActivated) &&
-                this.cameraControl.CameraStreamState == Windows.Media.Devices.CameraStreamState.Shutdown)
+                this.saveControl.CameraStreamState == Windows.Media.Devices.CameraStreamState.Shutdown)
             {
                 // When our Window loses focus due to user interaction Windows shuts it down, so we 
                 // detect here when the window regains focus and trigger a restart of the camera.
-                await this.cameraControl.StartStreamAsync(isForRealTimeProcessing: true);
+                await this.saveControl.StartStreamAsync(isForRealTimeProcessing: true);
             }
         }
 
@@ -150,7 +214,8 @@ namespace IntelligentKioskSample.Views
                 this.lastSimilarPersistedFaceSample = null;
                 this.lastEmotionSample = null;
                 this.debugText.Text = "";
-
+                UpdateUIForNoFacesDetected();
+                this.helpButton.Visibility = Visibility.Collapsed;
                 this.isProcessingPhoto = false;
                 return;
             }
@@ -167,6 +232,7 @@ namespace IntelligentKioskSample.Views
             }
             else
             {
+
                 this.lastEmotionSample = e.DetectedEmotion;
 
                 EmotionScores averageScores = new EmotionScores
@@ -184,24 +250,40 @@ namespace IntelligentKioskSample.Views
                 this.emotionDataTimelineControl.DrawEmotionData(averageScores);
             }
 
+
+
             if (e.DetectedFaces == null || !e.DetectedFaces.Any())
             {
+                UpdateUIForNoFacesDetected();
                 this.lastDetectedFaceSample = null;
             }
             else
             {
                 this.lastDetectedFaceSample = e.DetectedFaces;
+                await e.IdentifyFacesAsync();
+                this.greetingTextBlock.Text = this.GetGreettingFromFaces(e);
             }
 
             // Compute Face Identification and Unique Face Ids
             await Task.WhenAll(e.IdentifyFacesAsync(), e.FindSimilarPersistedFacesAsync());
 
+            
+
             if (!e.IdentifiedPersons.Any())
             {
+                this.helpButton.Visibility = Visibility.Visible;
                 this.lastIdentifiedPersonSample = null;
             }
             else
             {
+                if (e.IdentifiedPersons.Count() != e.DetectedFaces.Count())
+                {
+                    this.helpButton.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    this.helpButton.Visibility = Visibility.Collapsed;
+                }
                 this.lastIdentifiedPersonSample = e.DetectedFaces.Select(f => new Tuple<Face, IdentifiedPerson>(f, e.IdentifiedPersons.FirstOrDefault(p => p.FaceId == f.FaceId)));
             }
 
@@ -217,8 +299,77 @@ namespace IntelligentKioskSample.Views
             this.UpdateDemographics(e);
 
             this.debugText.Text = string.Format("Latency: {0}ms", (int)(DateTime.Now - start).TotalMilliseconds);
-
+            this.cur_latency = (int)(DateTime.Now - start).TotalMilliseconds;
             this.isProcessingPhoto = false;
+        }
+        
+        private async void Speak(string text)
+        {
+            synthesizer.Voice = (SpeechSynthesizer.AllVoices.First(x => x.Gender == VoiceGender.Female && x.Language.Contains("zh-TW")));
+            if (!string.IsNullOrEmpty(text))
+            {
+                try
+                {
+                    SpeechSynthesisStream synthesisStream = await synthesizer.SynthesizeTextToStreamAsync(text);
+                    media.AutoPlay = true;
+                    media.SetSource(synthesisStream, synthesisStream.ContentType);
+                    media.Play();
+                }
+                catch (System.IO.FileNotFoundException)
+                {
+                    var messageDialog = new Windows.UI.Popups.MessageDialog("Media player components unavailable");
+                    await messageDialog.ShowAsync();
+                }
+                catch (Exception)
+                {
+                    // If the text is unable to be synthesized, throw an error message to the user.
+                    var messageDialog = new Windows.UI.Popups.MessageDialog("Unable to synthesize text");
+                    await messageDialog.ShowAsync();
+                }
+            }
+        }
+        private string GetGreettingFromFaces(ImageAnalyzer img)
+        {
+            if (img.IdentifiedPersons.Any())
+            {
+                string names = img.IdentifiedPersons.Count() > 1 ? string.Join(", ", img.IdentifiedPersons.Select(p => p.Person.Name)) : img.IdentifiedPersons.First().Person.Name;
+                this.greetingTextBlock.Foreground = new SolidColorBrush(Windows.UI.Colors.GreenYellow);
+                this.weather.Visibility = Visibility.Visible;
+                this.weatherTextBlock.Visibility = Visibility.Visible;
+                if (img.DetectedFaces.Count() > img.IdentifiedPersons.Count())
+                {
+                    //Speak(string.Format("歡迎回來, {0}和他的夥伴們!\n您可以使用以下的功能。", names));
+                    return string.Format("歡迎回來, {0}和他的夥伴們!\n您可以使用以下的功能。", names);
+                }
+                else
+                {
+                    //Speak(string.Format("歡迎回來, {0}! \n您可以使用以下的功能。", names));
+                    return string.Format("歡迎回來, {0}! \n您可以使用以下的功能。", names);
+                }
+            }
+            else
+            {
+                this.greetingTextBlock.Foreground = new SolidColorBrush(Windows.UI.Colors.Yellow);
+                this.weather.Visibility = Visibility.Collapsed;
+                this.weatherTextBlock.Visibility = Visibility.Collapsed;
+                if (img.DetectedFaces.Count() > 1)
+                {
+                    return "抱歉，無法認出你們任何人的名字...";
+                }
+                else
+                {
+                    return "抱歉，無法認出您的名字...";
+                }
+            }
+        }
+
+        private void UpdateUIForNoFacesDetected()
+        {
+            this.greetingTextBlock.Text = "站在螢幕前以開始偵測";
+            this.greetingTextBlock.Foreground = new SolidColorBrush(Windows.UI.Colors.White);
+            this.weather.Visibility = Visibility.Collapsed;
+            this.weatherTextBlock.Text = "";
+            this.weatherTextBlock.Visibility = Visibility.Collapsed;
         }
 
         private void ShowTimelineFeedbackForNoFaces()
@@ -232,7 +383,7 @@ namespace IntelligentKioskSample.Views
 
             if (string.IsNullOrEmpty(SettingsHelper.Instance.EmotionApiKey) || string.IsNullOrEmpty(SettingsHelper.Instance.FaceApiKey))
             {
-                await new MessageDialog("Missing Face or Emotion API Key. Please enter a key in the Settings page.", "Missing API Key").ShowAsync();
+                await new MessageDialog("缺少臉部或情緒分析金鑰。請至設定頁面以完成輸入。", "缺乏金鑰").ShowAsync();
             }
             else
             {
@@ -242,7 +393,7 @@ namespace IntelligentKioskSample.Views
                 await ResetDemographicsData();
                 this.UpdateDemographicsUI();
 
-                await this.cameraControl.StartStreamAsync(isForRealTimeProcessing: true);
+                await this.saveControl.StartStreamAsync(isForRealTimeProcessing: true);
                 this.StartProcessingLoop();
             }
 
@@ -255,61 +406,135 @@ namespace IntelligentKioskSample.Views
             {
                 bool demographicsChanged = false;
                 // Update the Visitor collection (either add new entry or update existing)
+                int temp_count = 0;
+                List<string> greetname = new List<string>();
                 foreach (var item in this.lastSimilarPersistedFaceSample)
                 {
                     Visitor visitor;
+                    var CurTime = DateTime.Now;
                     if (this.visitors.TryGetValue(item.SimilarPersistedFace.PersistedFaceId, out visitor))
                     {
-                        visitor.Count++;
+                        try
+                        {
+                            visitor.Date = CurTime.Date.ToString("yyyy/MM/dd");
+                            visitor.Hour = CurTime.Hour;
+                            visitor.Count++;
+                            if (this.lastIdentifiedPersonSample != null && this.lastIdentifiedPersonSample.Count() > temp_count && this.lastIdentifiedPersonSample.ElementAt(temp_count)!= null && this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2 != null && this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2.Person != null)
+                            {
+                                visitor.Name = this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2.Person.Name;
+                            }
+                            if (this.lastEmotionSample != null && this.lastEmotionSample.Count() > temp_count && this.lastEmotionSample.ElementAt(temp_count)!=null)
+                            {
+                                Emotion emo = this.lastEmotionSample.ElementAt(temp_count);
+                                visitor.Smile = Math.Round(emo.Scores.Happiness, 4);
+                            }
+                            var messageString = JsonConvert.SerializeObject(visitor);
+                            Task.Run(async () => { await AzureIoTHub.SendSQLToCloudMessageAsync(messageString); });
+                        }
+                        catch(NullReferenceException e)
+                        {
+                            this.debugText.Text = string.Format("NullRefenrenceException source at 1: {0}", e.Source);
+                        }
                     }
                     else
                     {
-                        demographicsChanged = true;
+                        try
+                        {
+                            demographicsChanged = true;
+                            double smile=0;
+                            if (this.lastEmotionSample != null && this.lastEmotionSample.Count() > temp_count && this.lastEmotionSample.ElementAt(temp_count)!=null)
+                            {
+                                Emotion emo = this.lastEmotionSample.ElementAt(temp_count);
+                                smile = Math.Round(emo.Scores.Happiness, 4);
+                            }
+                            else
+                            {
+                                smile = 0;
+                            }
+                            int male = 1;
+                            double age = item.Face.FaceAttributes.Age;
+                            if (string.Compare(item.Face.FaceAttributes.Gender, "male", StringComparison.OrdinalIgnoreCase) == 0)
+                            {
+                                male = 0;
+                            }
+                            if (this.lastIdentifiedPersonSample != null && this.lastIdentifiedPersonSample.Count() > temp_count && this.lastIdentifiedPersonSample.ElementAt(temp_count)!=null && this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2!=null && this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2.Person!=null )
+                            {
+                                string name = this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2.Person.Name;
+                                if (name != null)
+                                {
+                                    visitor = new Visitor { UniqueId = item.SimilarPersistedFace.PersistedFaceId, Count = 1, Gender = male, Age = age, Smile = smile, Date = CurTime.Date.ToString("yyyy/MM/dd"), Hour = CurTime.Hour, Name = name, Device = deviceName };
+                                    greetname.Add(name);
+                                }
+                                else
+                                {
+                                    visitor = new Visitor { UniqueId = item.SimilarPersistedFace.PersistedFaceId, Count = 1, Gender = male, Age = age, Smile = smile, Date = CurTime.Date.ToString("yyyy/MM/dd"), Hour = CurTime.Hour, Name = name, Device = deviceName };
+                                }
+                            }
+                            else
+                            {
+                                visitor = new Visitor { UniqueId = item.SimilarPersistedFace.PersistedFaceId, Count = 1, Gender = male, Age = age, Smile = smile, Date = CurTime.Date.ToString("yyyy/MM/dd"), Hour = CurTime.Hour, Name = null, Device = deviceName};
+                            }
+                            this.visitors.Add(visitor.UniqueId, visitor);
+                            this.demographics.Visitors.Add(visitor);
 
-                        visitor = new Visitor { UniqueId = item.SimilarPersistedFace.PersistedFaceId, Count = 1 };
-                        this.visitors.Add(visitor.UniqueId, visitor);
-                        this.demographics.Visitors.Add(visitor);
+                            // Update the demographics stats. We only do it for new visitors to avoid double counting.
+                            AgeDistribution genderBasedAgeDistribution = null;
+                            if (string.Compare(item.Face.FaceAttributes.Gender, "male", StringComparison.OrdinalIgnoreCase) == 0)
+                            {
+                                this.demographics.OverallMaleCount++;
+                                genderBasedAgeDistribution = this.demographics.AgeGenderDistribution.MaleDistribution;
+                            }
+                            else
+                            {
+                                this.demographics.OverallFemaleCount++;
+                                genderBasedAgeDistribution = this.demographics.AgeGenderDistribution.FemaleDistribution;
+                            }
 
-                        // Update the demographics stats. We only do it for new visitors to avoid double counting. 
-                        AgeDistribution genderBasedAgeDistribution = null;
-                        if (string.Compare(item.Face.FaceAttributes.Gender, "male", StringComparison.OrdinalIgnoreCase) == 0)
-                        {
-                            this.demographics.OverallMaleCount++;
-                            genderBasedAgeDistribution = this.demographics.AgeGenderDistribution.MaleDistribution;
-                        }
-                        else
-                        {
-                            this.demographics.OverallFemaleCount++;
-                            genderBasedAgeDistribution = this.demographics.AgeGenderDistribution.FemaleDistribution;
-                        }
+                            if (item.Face.FaceAttributes.Age < 16)
+                            {
+                                genderBasedAgeDistribution.Age0To15++;
+                            }
+                            else if (item.Face.FaceAttributes.Age < 20)
+                            {
+                                genderBasedAgeDistribution.Age16To19++;
+                            }
+                            else if (item.Face.FaceAttributes.Age < 30)
+                            {
+                                genderBasedAgeDistribution.Age20s++;
+                            }
+                            else if (item.Face.FaceAttributes.Age < 40)
+                            {
+                                genderBasedAgeDistribution.Age30s++;
+                            }
+                            else if (item.Face.FaceAttributes.Age < 50)
+                            {
+                                genderBasedAgeDistribution.Age40s++;
+                            }
+                            else
+                            {
+                                genderBasedAgeDistribution.Age50sAndOlder++;
+                            }
 
-                        if (item.Face.FaceAttributes.Age < 16)
-                        {
-                            genderBasedAgeDistribution.Age0To15++;
+                            var messageString = JsonConvert.SerializeObject(visitor);
+                            Task.Run(async () => { await AzureIoTHub.SendSQLToCloudMessageAsync(messageString); });
                         }
-                        else if (item.Face.FaceAttributes.Age < 20)
+                        catch (NullReferenceException e)
                         {
-                            genderBasedAgeDistribution.Age16To19++;
-                        }
-                        else if (item.Face.FaceAttributes.Age < 30)
-                        {
-                            genderBasedAgeDistribution.Age20s++;
-                        }
-                        else if (item.Face.FaceAttributes.Age < 40)
-                        {
-                            genderBasedAgeDistribution.Age30s++;
-                        }
-                        else if (item.Face.FaceAttributes.Age < 50)
-                        {
-                            genderBasedAgeDistribution.Age40s++;
-                        }
-                        else
-                        {
-                            genderBasedAgeDistribution.Age50sAndOlder++;
+                            this.debugText.Text = string.Format("NullRefenrenceException source at 2: {0}", e.Source);
                         }
                     }
-                }
 
+                    temp_count++;
+                }
+                if(greetname.Count > 0)
+                {
+                    string greetinglist = "";
+                    foreach(var name in greetname)
+                    {
+                        greetinglist += name + ",";
+                    }
+                    Speak(string.Format("歡迎回來{0}", greetinglist));
+                }
                 if (demographicsChanged)
                 {
                     this.ageGenderDistributionControl.UpdateData(this.demographics);
@@ -362,11 +587,11 @@ namespace IntelligentKioskSample.Views
         {
             this.isProcessingLoopInProgress = false;
             Window.Current.Activated -= CurrentWindowActivationStateChanged;
-            this.cameraControl.CameraAspectRatioChanged -= CameraControl_CameraAspectRatioChanged;
+            this.saveControl.CameraAspectRatioChanged -= CameraControl_CameraAspectRatioChanged;
 
             await this.ResetDemographicsData();
 
-            await this.cameraControl.StopStreamAsync();
+            await this.saveControl.StopStreamAsync();
             base.OnNavigatingFrom(e);
         }
 
@@ -377,7 +602,7 @@ namespace IntelligentKioskSample.Views
 
         private void UpdateCameraHostSize()
         {
-            this.cameraHostGrid.Width = this.cameraHostGrid.ActualHeight * (this.cameraControl.CameraAspectRatio != 0 ? this.cameraControl.CameraAspectRatio : 1.777777777777);
+            this.cameraHostGrid.Width = this.cameraHostGrid.ActualHeight * (this.saveControl.CameraAspectRatio != 0 ? this.saveControl.CameraAspectRatio : 1.777777777777);
         }
 
         public EmotionScores GetLastEmotionForFace(BitmapBounds faceBox)
@@ -431,6 +656,30 @@ namespace IntelligentKioskSample.Views
 
             return match?.SimilarPersistedFace;
         }
+
+        private void emotionDataTimelineControl_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private async void button_Click(object sender, RoutedEventArgs e)
+        {
+            await new MessageDialog("若出現Unknown，則代表您可能不存在於人物群組中，或您現有的照片無法讓我們精準的辨認。\n您可以點擊右側的相機圖案去做影像擷取之功能，以利之後臉部辨識之精確性。", "Help(關於Unknown)").ShowAsync();
+        }
+
+        private async void weather_Click(object sender, RoutedEventArgs e)
+        {
+            this.weatherTextBlock.Text = "Hold on ...";
+            WeatherDataServiceFactory obj = WeatherDataServiceFactory.Instance;                     //get instance of weather data service factory
+
+            Location location = new Location();                                                     //create location object
+            location.city = "Taipei";
+
+            var tmp = await obj.GetWeatherDataService(location);
+
+            tmp.Main.Temp = tmp.Main.Temp - 273.15;
+            this.weatherTextBlock.Text = "國家: " + tmp.Sys.Country.ToString() + "\n城市:   "+ tmp.Name.ToString() + "\n氣溫:   " + Math.Round(tmp.Main.Temp,2).ToString() +  "(攝氏)" + "\n濕度:    "  + tmp.Main.Humidity.ToString() + "%";
+        }
     }
 
     [XmlType]
@@ -441,6 +690,27 @@ namespace IntelligentKioskSample.Views
 
         [XmlAttribute]
         public int Count { get; set; }
+
+        [XmlAttribute]
+        public int Gender { get; set; }
+
+        [XmlAttribute]
+        public double Age { get; set; }
+
+        [XmlAttribute]
+        public double Smile { get; set; }
+
+        [XmlAttribute]
+        public string Date { get; set; }
+
+        [XmlAttribute]
+        public int Hour { get; set; }
+
+        [XmlAttribute]
+        public string Name { get; set; }
+
+        [XmlAttribute]
+        public string Device { get; set; }
     }
 
     [XmlType]

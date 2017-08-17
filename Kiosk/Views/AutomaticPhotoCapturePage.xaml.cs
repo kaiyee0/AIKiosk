@@ -48,7 +48,7 @@ namespace IntelligentKioskSample.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    [KioskExperience(Title = "Automatic Photo Capture", ImagePath = "ms-appx:/Assets/camera.png", ExperienceType = ExperienceType.Kiosk)]
+    //[KioskExperience(Title = "Automatic Photo Capture", ImagePath = "ms-appx:/Assets/camera.png", ExperienceType = ExperienceType.Kiosk)]
     public sealed partial class AutomaticPhotoCapturePage : Page
     {
         public AutomaticPhotoCapturePage()

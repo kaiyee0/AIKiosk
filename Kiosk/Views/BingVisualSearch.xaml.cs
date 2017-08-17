@@ -43,7 +43,7 @@ using Windows.UI.Xaml.Navigation;
 
 namespace IntelligentKioskSample.Views
 {
-    [KioskExperience(Title = "Bing Visual Search", ImagePath = "ms-appx:/Assets/BingVisualSearch.jpg")]
+    //[KioskExperience(Title = "Bing Visual Search", ImagePath = "ms-appx:/Assets/BingVisualSearch.jpg")]
     public sealed partial class BingVisualSearch : Page
     {
         private ImageAnalyzer currentPhoto;

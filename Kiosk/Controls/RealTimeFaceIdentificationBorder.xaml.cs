@@ -67,7 +67,16 @@ namespace IntelligentKioskSample.Controls
 
             if (!string.IsNullOrEmpty(name))
             {
-                this.captionTextHeader.Text = string.Format("{0}, {1} ({2}%)", name, roundedAge, confidence);
+                string sex;
+                if (string.Compare(gender, "male", StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    sex = "男";
+                }
+                else
+                {
+                    sex = "女";
+                }
+                    this.captionTextHeader.Text = string.Format("{0}, {1}, {2} ({3}%)", name, roundedAge, sex, confidence);
             }
             else if (!string.IsNullOrEmpty(gender))
             {

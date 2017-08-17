@@ -120,6 +120,7 @@ namespace IntelligentKioskSample.Controls
             set { SetValue(ClearStateWhenClosedProperty, (bool)value); }
         }
 
+
         public string ImageContentType
         {
             get { return (string)GetValue(ImageContentTypeProperty); }
@@ -137,7 +138,6 @@ namespace IntelligentKioskSample.Controls
             get { return (bool)GetValue(RequireFaceInCameraCaptureProperty); }
             set { SetValue(RequireFaceInCameraCaptureProperty, (bool)value); }
         }
-
         public ImageSearchUserControl()
         {
             this.InitializeComponent();
@@ -151,24 +151,25 @@ namespace IntelligentKioskSample.Controls
 
         private async void onQuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs args)
         {
-            await QueryBingImages(args.QueryText);
+                await QueryBingImages(args.QueryText);
         }
 
         private async Task QueryBingImages(string query)
         {
             this.progressRing.IsActive = true;
-
-            try
+            if (BingSearchHelper.AutoSuggestionApiKey != null && BingSearchHelper.AutoSuggestionApiKey.Length > 0)
             {
-                IEnumerable<string> imageUrls = await BingSearchHelper.GetImageSearchResults(query, imageContent: this.ImageContentType, count: 30);
-                this.imageResultsGrid.ItemsSource = imageUrls.Select(url => new ImageAnalyzer(url));
+                try
+                {
+                    IEnumerable<string> imageUrls = await BingSearchHelper.GetImageSearchResults(query, imageContent: this.ImageContentType, count: 30);
+                    this.imageResultsGrid.ItemsSource = imageUrls.Select(url => new ImageAnalyzer(url));
+                }
+                catch (Exception ex)
+                {
+                    this.imageResultsGrid.ItemsSource = null;
+                    await Util.GenericApiCallExceptionHandler(ex, "Failure querying Bing Images");
+                }
             }
-            catch (Exception ex)
-            {
-                this.imageResultsGrid.ItemsSource = null;
-                await Util.GenericApiCallExceptionHandler(ex, "Failure querying Bing Images");
-            }
-
             this.progressRing.IsActive = false;
         }
 
@@ -257,7 +258,7 @@ namespace IntelligentKioskSample.Controls
             this.progressRing.IsActive = false;
         }
 
-        private async void OnCameraImageCaptured(object sender, ImageAnalyzer e)
+                private async void OnCameraImageCaptured(object sender, ImageAnalyzer e)
         {
             this.cameraCaptureFlyout.Hide();
             await this.HandleTrainingImageCapture(e);

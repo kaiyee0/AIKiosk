@@ -45,7 +45,7 @@ using Windows.UI.Xaml.Navigation;
 namespace IntelligentKioskSample.Views
 {
 
-    [KioskExperience(Title = "Greeting Kiosk", ImagePath = "ms-appx:/Assets/GreetingKiosk.jpg", ExperienceType = ExperienceType.Kiosk)]
+    //[KioskExperience(Title = "Greeting Kiosk", ImagePath = "ms-appx:/Assets/GreetingKiosk.jpg", ExperienceType = ExperienceType.Kiosk)]
     public sealed partial class GreetingKiosk : Page
     {
         private Task processingLoopTask;
@@ -151,7 +151,7 @@ namespace IntelligentKioskSample.Views
             }
 
             TimeSpan latency = DateTime.Now - start;
-            this.faceLantencyDebugText.Text = string.Format("Face API latency: {0}ms", (int)latency.TotalMilliseconds);
+            this.faceLantencyDebugText.Text = string.Format("延遲: {0}ms", (int)latency.TotalMilliseconds);
 
             this.isProcessingPhoto = false;
         }
@@ -198,7 +198,7 @@ namespace IntelligentKioskSample.Views
 
             if (string.IsNullOrEmpty(SettingsHelper.Instance.FaceApiKey))
             {
-                await new MessageDialog("Missing Face API Key. Please enter a key in the Settings page.", "Missing API Key").ShowAsync();
+                await new MessageDialog("缺少臉部金鑰，請至\"設定\"填入金鑰。", "缺少臉部金鑰").ShowAsync();
             }
             else
             {

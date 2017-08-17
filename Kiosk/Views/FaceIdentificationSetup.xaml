@@ -54,7 +54,7 @@
             <CommandBar.Content>
                 <ctl:PageHeader>
                     <ctl:PageHeader.HeaderContent>
-                        <TextBlock Text="FACE IDENTIFICATION SETUP" Style="{ThemeResource PageTitleTextBlockStyle}" TextWrapping="NoWrap"/>
+                        <TextBlock Text="人物群組設定" Style="{ThemeResource PageTitleTextBlockStyle}" TextWrapping="NoWrap"/>
                     </ctl:PageHeader.HeaderContent>
                 </ctl:PageHeader>
             </CommandBar.Content>
@@ -77,7 +77,7 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="Group:" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                <TextBlock Text="人物群組:" Style="{StaticResource SubtitleTextBlockStyle}"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"  >
                     <Button   Background="Transparent" Click="OnDeletePersonGroupClicked" x:Name="deleteGroupButton" Visibility="{Binding ElementName=personGroupsListView, Path=SelectedValue, Converter={StaticResource nullToVisibilityConverter}}">
                         <SymbolIcon Symbol="Delete"/>
@@ -113,7 +113,7 @@
                 </Grid.RowDefinitions>
 
                 <Grid >
-                    <TextBlock Text="People:" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Left" />
+                    <TextBlock Text="人物:" Style="{StaticResource SubtitleTextBlockStyle}" HorizontalAlignment="Left" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <Button   Background="Transparent" Click="OnDeletePersonClicked" x:Name="deletePersonButton" Visibility="{Binding ElementName=personGroupPeopleListView, Path=SelectedValue, Converter={StaticResource nullToVisibilityConverter}}">
@@ -157,7 +157,7 @@
                     <RowDefinition/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Text="Faces:" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock Text="臉孔:" Style="{StaticResource SubtitleTextBlockStyle}" />
                 <StackPanel Margin="100,0,0,0"  Orientation="Horizontal" HorizontalAlignment="Left">
                     <Button Background="Transparent" Click="OnDeleteFaceClicked" x:Name="deleteFaceButton" Visibility="{Binding ElementName=selectedPersonFacesGridView, Path=SelectedValue, Converter={StaticResource nullToVisibilityConverter}}" >
                         <SymbolIcon Symbol="Delete"/>
@@ -205,10 +205,10 @@
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="12">
             <SymbolIcon Symbol="Library" VerticalAlignment="Top"/>
             <StackPanel Margin="6,0,0,0" >
-                <TextBlock Text="- This is where you can manage the people to be recognized by the Face APIs." Style="{StaticResource CaptionTextBlockStyle}" />
-                <TextBlock Text="- Start by creating a group, then add people to the group and add faces to those people." Style="{StaticResource CaptionTextBlockStyle}" />
-                <TextBlock Text="- When you are done making modifications, click on the Train button to re-train the model in the cloud." Style="{StaticResource CaptionTextBlockStyle}" />
-                <TextBlock Text="- You can also add people in batches ('...' near the top), either from local photo albums or from Bing Image searches." Style="{StaticResource CaptionTextBlockStyle}" />
+                <TextBlock Text="- 您可以在這裡去管理您想要被辨識的人物臉孔。" Style="{StaticResource CaptionTextBlockStyle}" />
+                <TextBlock Text="- 首先，您必須要先創建一個人物群組，然後加入一些人物到群組，並將每一個人物都有連結到至少一張臉孔。" Style="{StaticResource CaptionTextBlockStyle}" />
+                <TextBlock Text="- 當您完成編輯以後，點擊訓練(重整)的按鈕去重新整理您的人物群組(否則新加入的人物將無法辨識)。" Style="{StaticResource CaptionTextBlockStyle}" />
+                <TextBlock Text="- 您也可以利用本地端的相片加入臉孔到您想加入臉孔的人物上。" Style="{StaticResource CaptionTextBlockStyle}" />
             </StackPanel>
         </StackPanel>
 

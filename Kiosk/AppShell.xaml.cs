@@ -75,14 +75,14 @@ namespace IntelligentKioskSample
                 new NavMenuItem()
                 {
                     Symbol = Symbol.Contact2,
-                    Label = "Face Identification Setup",
+                    Label = "人臉辨識設定",
                     DestPage = typeof(FaceIdentificationSetup)
                 },
 
                 new NavMenuItem()
                 {
                     Symbol = Symbol.Setting,
-                    Label = "Settings",
+                    Label = "設定",
                     DestPage = typeof(SettingsPage)
                 }
             });
@@ -140,15 +140,7 @@ namespace IntelligentKioskSample
                 NavMenuList.SelectedItem = navMenuItem;
             }
 
-            NavigateToPage(destPage);
-        }
-
-        public void NavigateToPage(Type destPage)
-        {
-            if (this.AppFrame.CurrentSourcePageType != destPage)
-            {
-                AppFrame.Navigate(destPage, string.Empty, new Windows.UI.Xaml.Media.Animation.SuppressNavigationTransitionInfo());
-            }
+            AppFrame.Navigate(destPage, string.Empty, new Windows.UI.Xaml.Media.Animation.SuppressNavigationTransitionInfo());
         }
 
         public Frame AppFrame { get { return this.frame; } }

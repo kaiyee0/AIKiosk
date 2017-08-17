@@ -97,7 +97,7 @@ namespace ServiceHelpers
                 }
                 catch (ClientException exception) when (exception.HttpStatus == (System.Net.HttpStatusCode)429 && retriesLeft > 0)
                 {
-                    ErrorTrackingHelper.TrackException(exception, "Emotion API throttling error");
+                    ErrorTrackingHelper.TrackException(exception, "情緒分析金鑰錯誤(throttling)");
                     if (retriesLeft == 1 && Throttled != null)
                     {
                         Throttled();

@@ -9,34 +9,47 @@
     SizeChanged="OnPageSizeChanged"
     mc:Ignorable="d">
 
-        
+
     <Grid x:Name="MainGrid" 
-            EntranceNavigationTransitionInfo.IsTargetElement="True" Background="#FF262626">
+            Background="#FF262626">
 
         <Grid.RowDefinitions>
             <RowDefinition Height="0.02*" />
             <RowDefinition Height="auto" />
-            <RowDefinition Height="0.01*" />            
+            <RowDefinition Height="0.01*" />
             <RowDefinition />
-            <RowDefinition Height="0.01*" />                            
-            <RowDefinition Height="auto"/>                
-            <RowDefinition Height="0.05*" />            
+            <RowDefinition Height="0.01*" />
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="0.05*" />
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center">
-
-            <Grid x:Name="cameraHostGrid">
-                <ctl:CameraControl x:Name="cameraControl" />
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid x:Name="cameraHostGrid" Grid.Column="1">
+                <ctl:SaveControl x:Name="saveControl" />
+                <Button Background="#FF262626" x:Name="helpButton" Content="Help(關於Unknown)" HorizontalAlignment="Left" VerticalAlignment="Bottom"  Click="button_Click" RenderTransformOrigin="18.969,-0.094" Margin="5,0,0,5" Visibility="Collapsed"/>
+                <TextBlock x:Name="debugText" Opacity="0.6" Margin="0,0,2,0"  HorizontalAlignment="Right" VerticalAlignment="Bottom" />
             </Grid>
 
-            <TextBlock x:Name="debugText" Opacity="0.6" Margin="0,0,2,0"  HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+            <Grid Grid.Column="3">
+                <TextBlock x:Name="greetingTextBlock" HorizontalAlignment="Center" Margin="10,70,10,10" Text="Step in front of the camera to start"  FontSize="25" Style="{StaticResource HeaderTextBlockStyle}" FontFamily="Segoe UI Light" FontStyle="Italic"  />
+                <Button Background="#FF262626" x:Name="weather" Content="Weather" HorizontalAlignment="Center" VerticalAlignment="Center" Click="weather_Click" RenderTransformOrigin="18.969,-0.094" Margin="10,0,10,5" FontSize="25" Visibility="Collapsed" />
+                <TextBlock x:Name="weatherTextBlock" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10,0,0,70" FontSize="20" Visibility="Collapsed" />
+            </Grid>
+
         </Grid>
 
         <StackPanel Grid.Row="1">
-            <TextBlock Text="Realtime Crowd Insights Sample" Foreground="White" HorizontalAlignment="Center" FontFamily="Segoe UI Light" Style="{StaticResource HeaderTextBlockStyle}"/>
-            <TextBlock Text="Deriving realtime crowd insights from age, gender, emotion, face identification and unique face tracking" HorizontalAlignment="Center" FontFamily="Segoe UI Light"  Style="{StaticResource SubtitleTextBlockStyle}" FontStyle="Italic"/>
+            <TextBlock Text="即時影像人臉分析" Foreground="White" HorizontalAlignment="Center" FontFamily="Segoe UI Light" Style="{StaticResource HeaderTextBlockStyle}"/>
+            <TextBlock Text="   經由攝相鏡頭即時取得影像內所有人物的相關資訊，包含人名、年齡、情緒、性別等等...。" HorizontalAlignment="Center" FontFamily="Segoe UI Light"  Style="{StaticResource SubtitleTextBlockStyle}" FontStyle="Italic"/>
         </StackPanel>
-
+        <MediaElement x:Name="media" AutoPlay="False"/>
         <Grid Grid.Row="5" Height="165">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="0.1*"/>
@@ -45,14 +58,14 @@
                 <ColumnDefinition />
                 <ColumnDefinition Width="0.1*"/>
             </Grid.ColumnDefinitions>
-            <ctl:AgeGenderDistributionControl x:Name="ageGenderDistributionControl" HeaderText="Demographics" SubHeaderText="At this hour (erased hourly)" SubHeaderVisibility="Visible" Grid.Column="1" />
-            <ctl:OverallStatsControl x:Name="overallStatsControl" HeaderText="Total Faces" SubHeaderText="At this hour (erased hourly)" SubHeaderVisibility="Visible" Margin="24,0,24,0" Grid.Column="2" />
-            <ctl:EmotionResponseTimelineControl Grid.Column="3" x:Name="emotionDataTimelineControl"  />
+            <ctl:AgeGenderDistributionControl x:Name="ageGenderDistributionControl" HeaderText="性別與年齡分析" SubHeaderText="單位:小時(每小時更新)" SubHeaderVisibility="Visible" Grid.Column="1" />
+            <ctl:OverallStatsControl x:Name="overallStatsControl" HeaderText="臉部分析" SubHeaderText="單位:小時(每小時更新)" SubHeaderVisibility="Visible" Margin="24,0,24,0" Grid.Column="2" />
+            <ctl:EmotionResponseTimelineControl Grid.Column="3" x:Name="emotionDataTimelineControl" Loaded="emotionDataTimelineControl_Loaded"  />
         </Grid>
 
         <Grid Grid.Row="3" x:Name="initializingUI" Visibility="Collapsed">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Foreground="White" Text="Resetting data..." Style="{StaticResource HeaderTextBlockStyle}"/>
+                <TextBlock Foreground="White" Text="重新整理..." Style="{StaticResource HeaderTextBlockStyle}"/>
                 <ProgressRing x:Name="initializingProgressRing" Height="100" Width="100" Foreground="White"/>
             </StackPanel>
         </Grid>

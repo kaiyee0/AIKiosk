@@ -55,7 +55,7 @@ namespace IntelligentKioskSample.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    [KioskExperience(Title = "Bing News Analytics", ImagePath = "ms-appx:/Assets/BingNewsAnalytics.png", ExperienceType = ExperienceType.Kiosk)]
+    //[KioskExperience(Title = "Bing News Analytics", ImagePath = "ms-appx:/Assets/BingNewsAnalytics.png", ExperienceType = ExperienceType.Kiosk)]
     public sealed partial class BingNewsAnalyticsPage : Page
     {
         public ObservableCollection<NewsAndSentimentScore> FilteredNewsResults { get; set; } = new ObservableCollection<NewsAndSentimentScore>();

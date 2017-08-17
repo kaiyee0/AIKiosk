@@ -100,20 +100,22 @@
     <None Include="IntelligentKioskSample_TemporaryKey.pfx" />
     <None Include="packages.config" />
     <None Include="project.json" />
+    <None Include="Service References\CognitiveHub\ConnectedService.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="AzureIoTHub.cs" />
     <Compile Include="Controls\Converters.cs" />
     <Compile Include="Controls\EmotionToColoredBar.xaml.cs">
       <DependentUpon>EmotionToColoredBar.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\OCRBorder.xaml.cs">
-      <DependentUpon>OCRBorder.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\OverallStatsControl.xaml.cs">
       <DependentUpon>OverallStatsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SaveControl.xaml.cs">
+      <DependentUpon>SaveControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\SentimentControl.xaml.cs">
       <DependentUpon>SentimentControl.xaml</DependentUpon>
@@ -164,6 +166,7 @@
     </Compile>
     <Compile Include="NavMenuItem.cs" />
     <Compile Include="SettingsHelper.cs" />
+    <Compile Include="TTSClient.cs" />
     <Compile Include="Util.cs" />
     <Compile Include="Views\BingNewsAnalytics.xaml.cs">
       <DependentUpon>BingNewsAnalytics.xaml</DependentUpon>
@@ -171,13 +174,14 @@
     <Compile Include="Views\BingVisualSearch.xaml.cs">
       <DependentUpon>BingVisualSearch.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\CusomVision\CustomVisionExplorer.xaml.cs">
-      <DependentUpon>CustomVisionExplorer.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\CusomVision\CustomVisionServiceHelper.cs" />
-    <Compile Include="Views\CusomVision\CustomVisionSetup.xaml.cs">
-      <DependentUpon>CustomVisionSetup.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="Views\DataClasses\CityWeather.cs" />
+    <Compile Include="Views\DataClasses\Clouds.cs" />
+    <Compile Include="Views\DataClasses\Coord.cs" />
+    <Compile Include="Views\DataClasses\Main.cs" />
+    <Compile Include="Views\DataClasses\Sys.cs" />
+    <Compile Include="Views\DataClasses\Weather.cs" />
+    <Compile Include="Views\DataClasses\WeatherDataServiceException.cs" />
+    <Compile Include="Views\DataClasses\Wind.cs" />
     <Compile Include="Views\DemoLauncherPage.xaml.cs">
       <DependentUpon>DemoLauncherPage.xaml</DependentUpon>
     </Compile>
@@ -187,6 +191,8 @@
     <Compile Include="Views\GreetingKiosk.xaml.cs">
       <DependentUpon>GreetingKiosk.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\IWeatherDataService.cs" />
+    <Compile Include="Views\Location.cs" />
     <Compile Include="Views\MallKioskPage.xaml.cs">
       <DependentUpon>MallKioskPage.xaml</DependentUpon>
     </Compile>
@@ -197,6 +203,9 @@
     <Compile Include="Views\AutomaticPhotoCapturePage.xaml.cs">
       <DependentUpon>AutomaticPhotoCapturePage.xaml</DependentUpon>
     </Compile>
+    <!-- <Compile Include="Views\PersonDetailsPage.xaml.cs">
+      <DependentUpon>PersonDetailsPage.xaml</DependentUpon>
+    </Compile> -->
     <Compile Include="Views\EmotionRecognitionPage.xaml.cs">
       <DependentUpon>EmotionRecognitionPage.xaml</DependentUpon>
     </Compile>
@@ -212,6 +221,12 @@
     <Compile Include="AppShell.xaml.cs">
       <DependentUpon>AppShell.xaml</DependentUpon>
     </Compile>
+    <!-- <Compile Include="Views\PersonGroupDetailsPage.xaml.cs">
+      <DependentUpon>PersonGroupDetailsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\PersonGroupsPage.xaml.cs">
+      <DependentUpon>PersonGroupsPage.xaml</DependentUpon>
+    </Compile> -->
     <Compile Include="Views\LandingPage.xaml.cs">
       <DependentUpon>LandingPage.xaml</DependentUpon>
     </Compile>
@@ -222,9 +237,7 @@
     <Compile Include="Views\VideoInsightsPage.xaml.cs">
       <DependentUpon>VideoInsightsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\VisionApiExplorer.xaml.cs">
-      <DependentUpon>VisionApiExplorer.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="Views\WeatherDataServiceFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -235,7 +248,6 @@
     <Content Include="Assets\BingNewsAnalytics.png" />
     <Content Include="Assets\BingVisualSearch.jpg" />
     <Content Include="Assets\camera.png" />
-    <Content Include="Assets\CustomVisionExplorer.png" />
     <Content Include="Assets\female.png" />
     <Content Include="Assets\GreetingKiosk.JPG" />
     <Content Include="Assets\male_blue.png" />
@@ -249,10 +261,10 @@
     <Content Include="Assets\RealTimeFromVideo.PNG" />
     <Content Include="Assets\smalltile-sdk.png" />
     <Content Include="Assets\splash-sdk.png" />
+    <Content Include="Assets\squaretile-sdk-44.scale-100.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\squaretile-sdk.png" />
     <Content Include="Assets\squaretile-sdk-44.png" />
-    <Content Include="Assets\VisionAPI.jpg" />
     <Content Include="Properties\Default.rd.xml">
       <SubType>Designer</SubType>
     </Content>
@@ -268,10 +280,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Controls\OCRBorder.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Controls\OverallStatsControl.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -279,6 +287,10 @@
     <Page Include="Controls\CameraControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SaveControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\SentimentControl.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -349,14 +361,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="Views\CusomVision\CustomVisionExplorer.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\CusomVision\CustomVisionSetup.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="Views\DemoLauncherPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -381,6 +385,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <!-- <Page Include="Views\PersonDetailsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page> -->
     <Page Include="Views\EmotionRecognitionPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -401,6 +409,14 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <!-- <Page Include="Views\PersonGroupDetailsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\PersonGroupsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page> -->
     <Page Include="Views\LandingPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -410,10 +426,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\VideoInsightsPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="Views\VisionApiExplorer.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -427,6 +439,9 @@
       <Project>{5d9320af-a9e4-48e3-89bc-9f7f0954b298}</Project>
       <Name>ServiceHelpers</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

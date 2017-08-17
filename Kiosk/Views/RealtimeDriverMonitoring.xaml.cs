@@ -60,7 +60,7 @@ namespace IntelligentKioskSample.Views
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    [KioskExperience(Title = "Realtime Driver Monitoring", ImagePath = "ms-appx:/Assets/RealtimeDriverMonitoring.jpg", ExperienceType = ExperienceType.Other)]
+    //[KioskExperience(Title = "Realtime Driver Monitoring", ImagePath = "ms-appx:/Assets/RealtimeDriverMonitoring.jpg", ExperienceType = ExperienceType.Other)]
     public sealed partial class RealtimeDriverMonitoring : Page, INotifyPropertyChanged
     {
         private DateTime lastEyeOpenTime = DateTime.MinValue;
@@ -187,7 +187,7 @@ namespace IntelligentKioskSample.Views
 
             TimeSpan latency = DateTime.Now - start;
 
-            this.faceLantencyDebugText.Text = string.Format("Face API latency: {0}ms", (int)latency.TotalMilliseconds);
+            this.faceLantencyDebugText.Text = string.Format("延遲: {0}ms", (int)latency.TotalMilliseconds);
             this.highLatencyWarning.Visibility = latency.TotalSeconds <= 1 ? Visibility.Collapsed : Visibility.Visible;
 
             this.StartDriverIdAsync(e);

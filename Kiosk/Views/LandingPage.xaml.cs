@@ -53,7 +53,7 @@ namespace IntelligentKioskSample.Views
     /// </summary>
     public sealed partial class LandingPage : Page
     {
-        public static string Title { get; } = "Overview";
+        public static string Title { get; } = "首頁";
 
         public LandingPage()
         {
