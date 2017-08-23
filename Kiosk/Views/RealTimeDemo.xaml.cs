@@ -358,7 +358,7 @@ namespace IntelligentKioskSample.Views
             {
                 this.lastDetectedFaceSample = e.DetectedFaces;
                 await e.IdentifyFacesAsync();
-                this.greetingTextBlock.Text = this.GetGreettingFromFaces(e);
+                //this.greetingTextBlock.Text = this.GetGreettingFromFaces(e);
             }
 
             // Compute Face Identification and Unique Face Ids
@@ -427,6 +427,41 @@ namespace IntelligentKioskSample.Views
         }
 
         private string GetGreettingFromFaces(ImageAnalyzer img)
+        {
+            if (img.IdentifiedPersons.Any())
+            {
+                string names = img.IdentifiedPersons.Count() > 1 ? string.Join(", ", img.IdentifiedPersons.Select(p => p.Person.Name)) : img.IdentifiedPersons.First().Person.Name;
+                this.greetingTextBlock.Foreground = new SolidColorBrush(Windows.UI.Colors.GreenYellow);
+                this.weather.Visibility = Visibility.Visible;
+                this.weatherTextBlock.Visibility = Visibility.Visible;
+                if (img.DetectedFaces.Count() > img.IdentifiedPersons.Count())
+                {
+                    //Speak(string.Format("歡迎回來, {0}和他的夥伴們!\n您可以使用以下的功能。", names));
+                    return string.Format("歡迎回來, {0}和他的夥伴們!\n您可以使用以下的功能。", names);
+                }
+                else
+                {
+                    //Speak(string.Format("歡迎回來, {0}! \n您可以使用以下的功能。", names));
+                    return string.Format("歡迎回來, {0}! \n您可以使用以下的功能。", names);
+                }
+            }
+            else
+            {
+                this.greetingTextBlock.Foreground = new SolidColorBrush(Windows.UI.Colors.Yellow);
+                this.weather.Visibility = Visibility.Collapsed;
+                this.weatherTextBlock.Visibility = Visibility.Collapsed;
+                if (img.DetectedFaces.Count() > 1)
+                {
+                    return "抱歉，無法認出你們任何人的名字...";
+                }
+                else
+                {
+                    return "抱歉，無法認出您的名字...";
+                }
+            }
+        }
+
+        private string Greet_action(ImageAnalyzer img)
         {
             if (img.IdentifiedPersons.Any())
             {
@@ -638,6 +673,13 @@ namespace IntelligentKioskSample.Views
                     }
                     if (GreetVisitor){
                         Speak(string.Format("你好{0}", greetinglist));
+                        if (this.lastSimilarPersistedFaceSample.Count() > greetinglist.Count()){
+                            otherTextBlock.Text = string.Format("你好, {0}和他(她)的夥伴們!", greetinglist);
+                        }
+                        else
+                        {
+                            otherTextBlock.Text = string.Format("你好, {0}!", greetinglist);
+                        }
                         GreetVisitor = false;
                     }
                 }
@@ -790,8 +832,7 @@ namespace IntelligentKioskSample.Views
 
         private async void weather_action()
         {
-            this.weatherTextBlock.Visibility = Visibility.Visible;
-            this.weatherTextBlock.Text = "Hold on ...";
+            this.otherTextBlock.Text = "Hold on ...";
             WeatherDataServiceFactory obj = WeatherDataServiceFactory.Instance;                     //get instance of weather data service factory
 
             Location location = new Location();                                                     //create location object
@@ -799,7 +840,7 @@ namespace IntelligentKioskSample.Views
 
             var tmp = await obj.GetWeatherDataService(location);
             tmp.Main.Temp = tmp.Main.Temp - 273.15;
-            this.weatherTextBlock.Text = "國家: " + tmp.Sys.Country.ToString() + "\n城市:   " + tmp.Name.ToString() + "\n氣溫:   " + Math.Round(tmp.Main.Temp, 2).ToString() + "(攝氏)" + "\n濕度:    " + tmp.Main.Humidity.ToString() + "%";
+            this.otherTextBlock.Text = "國家: " + tmp.Sys.Country.ToString() + "\n城市:   " + tmp.Name.ToString() + "\n氣溫:   " + Math.Round(tmp.Main.Temp, 2).ToString() + "(攝氏)" + "\n濕度:    " + tmp.Main.Humidity.ToString() + "%";
             string weatherStr = tmp.Name.ToString() + "現在的氣溫是" + Math.Round(tmp.Main.Temp, 2).ToString() + "攝氏度，濕度是" + tmp.Main.Humidity.ToString() + "百分比";
             Speak(weatherStr);
         }
@@ -808,6 +849,7 @@ namespace IntelligentKioskSample.Views
         {
             // Disable the UI while recognition is occurring, and provide feedback to the user about current state.
             Microphone.IsEnabled = false;
+            otherTextBlock.Text = "";
             Debug.WriteLine(" listening for speech...");
 
             // Start recognition.
@@ -886,13 +928,16 @@ namespace IntelligentKioskSample.Views
                                 break;
                             case "Emotion":
                                 break;
+                            case "Translate":
+                                speechTextBlock.Text = speechTextBlock.Text + "\n\n我會幫你翻譯! \n";
+                                break;
                             default:
                                 break;
                         }
                     }
                     else
                     {
-                        //do something
+                        speechTextBlock.Text = speechTextBlock.Text + "\n\n對不起，我不明白你在說什麼，麻煩你換個方式再說一遍。\n";
                     }
                 }
                 catch (Exception e)
