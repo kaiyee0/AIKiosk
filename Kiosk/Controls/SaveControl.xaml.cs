@@ -687,5 +687,27 @@ namespace IntelligentKioskSample.Controls
                 this.CameraRestarted?.Invoke(this, EventArgs.Empty);
             }
         }
+
+        public async void SavePhoto()
+        {
+            if (this.cameraControlSymbol.Symbol == Symbol.Save)
+            {
+                //var img = await CaptureFrameAsync();
+                var img = await myCaptureFrameAsync();
+                if (img != null)
+                {
+                    this.cameraControlSymbol.Symbol = Symbol.Refresh;
+                    this.OnImageCaptured(img);
+                }
+            }
+            else
+            {
+                this.cameraControlSymbol.Symbol = Symbol.Save;
+
+                await StartStreamAsync();
+
+                this.CameraRestarted?.Invoke(this, EventArgs.Empty);
+            }
+        }
     }
 }

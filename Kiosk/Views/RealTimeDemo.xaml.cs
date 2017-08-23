@@ -97,6 +97,8 @@ namespace IntelligentKioskSample.Views
         private int cur_latency;
         private static string deviceName;
 
+        bool GreetVisitor;
+
         private SpeechSynthesizer synthesizer;
 
         Authentication auth = new Authentication("475623a6b9fc456d904015983b13ba40");
@@ -131,6 +133,7 @@ namespace IntelligentKioskSample.Views
             starving_count = 0;
             last_latency = -1;
             cur_latency = -2;
+            GreetVisitor = false;
         }
 
         private async void initMicrophone()
@@ -230,7 +233,6 @@ namespace IntelligentKioskSample.Views
                 this.processingLoopTask = Task.Run(() => this.ProcessingLoop());
             }
         }
-
 
         private async void ProcessingLoop()
         {
@@ -423,6 +425,7 @@ namespace IntelligentKioskSample.Views
                 }
             }
         }
+
         private string GetGreettingFromFaces(ImageAnalyzer img)
         {
             if (img.IdentifiedPersons.Any())
@@ -518,6 +521,10 @@ namespace IntelligentKioskSample.Views
                             if (this.lastIdentifiedPersonSample != null && this.lastIdentifiedPersonSample.Count() > temp_count && this.lastIdentifiedPersonSample.ElementAt(temp_count)!= null && this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2 != null && this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2.Person != null)
                             {
                                 visitor.Name = this.lastIdentifiedPersonSample.ElementAt(temp_count).Item2.Person.Name;
+                            }
+                            if (visitor.Name != null)
+                            {
+                                greetname.Add(visitor.Name);
                             }
                             if (this.lastEmotionSample != null && this.lastEmotionSample.Count() > temp_count && this.lastEmotionSample.ElementAt(temp_count)!=null)
                             {
@@ -629,7 +636,10 @@ namespace IntelligentKioskSample.Views
                     {
                         greetinglist += name + ",";
                     }
-                    Speak(string.Format("歡迎回來{0}", greetinglist));
+                    if (GreetVisitor){
+                        Speak(string.Format("你好{0}", greetinglist));
+                        GreetVisitor = false;
+                    }
                 }
                 if (demographicsChanged)
                 {
@@ -772,9 +782,26 @@ namespace IntelligentKioskSample.Views
             location.city = "Taipei";
 
             var tmp = await obj.GetWeatherDataService(location);
-
             tmp.Main.Temp = tmp.Main.Temp - 273.15;
             this.weatherTextBlock.Text = "國家: " + tmp.Sys.Country.ToString() + "\n城市:   "+ tmp.Name.ToString() + "\n氣溫:   " + Math.Round(tmp.Main.Temp,2).ToString() +  "(攝氏)" + "\n濕度:    "  + tmp.Main.Humidity.ToString() + "%";
+            string weatherStr = tmp.Name.ToString() + "現在的氣溫是" + Math.Round(tmp.Main.Temp, 2).ToString() + "攝氏度，濕度是" + tmp.Main.Humidity.ToString() + "百分比";
+            Speak(weatherStr);
+        }
+
+        private async void weather_action()
+        {
+            this.weatherTextBlock.Visibility = Visibility.Visible;
+            this.weatherTextBlock.Text = "Hold on ...";
+            WeatherDataServiceFactory obj = WeatherDataServiceFactory.Instance;                     //get instance of weather data service factory
+
+            Location location = new Location();                                                     //create location object
+            location.city = "Taipei";
+
+            var tmp = await obj.GetWeatherDataService(location);
+            tmp.Main.Temp = tmp.Main.Temp - 273.15;
+            this.weatherTextBlock.Text = "國家: " + tmp.Sys.Country.ToString() + "\n城市:   " + tmp.Name.ToString() + "\n氣溫:   " + Math.Round(tmp.Main.Temp, 2).ToString() + "(攝氏)" + "\n濕度:    " + tmp.Main.Humidity.ToString() + "%";
+            string weatherStr = tmp.Name.ToString() + "現在的氣溫是" + Math.Round(tmp.Main.Temp, 2).ToString() + "攝氏度，濕度是" + tmp.Main.Humidity.ToString() + "百分比";
+            Speak(weatherStr);
         }
 
         private async void Microphone_Click(object sender, RoutedEventArgs e)
@@ -793,6 +820,9 @@ namespace IntelligentKioskSample.Views
                 if (speechRecognitionResult.Status == SpeechRecognitionResultStatus.Success)
                 {
                     Debug.WriteLine(speechRecognitionResult.Text);
+                    speechTextBlock.Text = "我聽到你說:" + speechRecognitionResult.Text;
+                    //start checking for intents
+                    processSpeech(speechRecognitionResult.Text);
                 }
                 else
                 {
@@ -823,6 +853,54 @@ namespace IntelligentKioskSample.Views
 
             // Reset UI state.
             Microphone.IsEnabled = true;
+        }
+
+        private async void processSpeech(string str)
+        {
+            using (var webClient = new Windows.Web.Http.HttpClient())
+            {
+                //string ip_address = GetLocalIp();
+                var uri = new Uri("https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/89e36123-823b-413a-8754-c838f378f758?subscription-key=96647e513e3a43abad18c99343e8c124&timezoneOffset=0&verbose=true&q="+str);
+                LUISobj result;
+                try
+                {
+                    var json = await webClient.GetStringAsync(uri);
+                    // Now parse with JSON.Net
+                    result = JsonConvert.DeserializeObject<LUISobj>(json);
+                    if(result.topScoringIntent.score > 0.5)
+                    {
+                        Debug.WriteLine(result.topScoringIntent.intent);
+                        switch (result.topScoringIntent.intent)
+                        {
+                            case "Weather":
+                                speechTextBlock.Text = speechTextBlock.Text + "\n\n我會顯示天氣給你看~\n";
+                                weather_action();
+                                break;
+                            case "Greet":
+                                speechTextBlock.Text = speechTextBlock.Text + "\n\n我會跟你問好 =) \n";
+                                GreetVisitor = true;
+                                break;
+                            case "Camera":
+                                speechTextBlock.Text = speechTextBlock.Text + "\n\n我會幫你拍照，然後存下來! \n";
+                                saveControl.SavePhoto();
+                                break;
+                            case "Emotion":
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        //do something
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Exception {0}.",e.Message);
+                    // Details in ex.Message and ex.HResult.       
+                }
+            }
         }
     }
 
@@ -889,5 +967,26 @@ namespace IntelligentKioskSample.Views
 
         [XmlArrayItem]
         public List<Visitor> Visitors { get; set; }
+    }
+
+
+    public class TopScoringIntent
+    {
+        public string intent { get; set; }
+        public double score { get; set; }
+    }
+
+    public class Intent
+    {
+        public string intent { get; set; }
+        public double score { get; set; }
+    }
+
+    public class LUISobj
+    {
+        public string query { get; set; }
+        public TopScoringIntent topScoringIntent { get; set; }
+        public List<Intent> intents { get; set; }
+        public List<object> entities { get; set; }
     }
 }
