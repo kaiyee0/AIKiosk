@@ -52,6 +52,9 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Media;
+using Windows.Media.SpeechRecognition;
+using Windows.Globalization;
+using Windows.Foundation;
 using WeatherAssignment;
 
 #region using for Text to Speech
@@ -86,6 +89,9 @@ namespace IntelligentKioskSample.Views
         private DemographicsData demographics;
         private Dictionary<Guid, Visitor> visitors = new Dictionary<Guid, Visitor>();
 
+        private static uint HResultPrivacyStatementDeclined = 0x80045509;
+        private static uint HResultRecognizerNotFound = 0x8004503a;
+
         private int starving_count;
         private int last_latency;
         private int cur_latency;
@@ -95,6 +101,12 @@ namespace IntelligentKioskSample.Views
 
         Authentication auth = new Authentication("475623a6b9fc456d904015983b13ba40");
         Synthesize cortana = new Synthesize();
+
+        private SpeechRecognizer speechRecognizer;
+        private CoreDispatcher dispatcher;
+        private ResourceContext speechContext;
+        private ResourceMap speechResourceMap;
+        private IAsyncOperation<SpeechRecognitionResult> recognitionOperation;
 
         public static string DeviceName
         {
@@ -119,6 +131,89 @@ namespace IntelligentKioskSample.Views
             starving_count = 0;
             last_latency = -1;
             cur_latency = -2;
+        }
+
+        private async void initMicrophone()
+        {
+            Microphone.IsEnabled = false;
+            if (speechRecognizer != null)
+            {
+                if (speechRecognizer.State != SpeechRecognizerState.Idle)
+                {
+                    if (recognitionOperation != null)
+                    {
+                        recognitionOperation.Cancel();
+                        recognitionOperation = null;
+                    }
+                }
+
+                speechRecognizer.StateChanged -= SpeechRecognizer_StateChanged;
+
+                this.speechRecognizer.Dispose();
+                this.speechRecognizer = null;
+            }
+            try
+            {
+                Language chiCN = new Language("zh-CN");
+                await InitializeRecognizer(chiCN);
+                Microphone.IsEnabled = true;
+            }
+            catch (Exception exception)
+            {
+                var messageDialog = new Windows.UI.Popups.MessageDialog(exception.Message, "Exception");
+                await messageDialog.ShowAsync();
+                Microphone.IsEnabled = false;
+            }
+        }
+
+        private async Task InitializeRecognizer(Language recognizerLanguage)
+        {
+            if (speechRecognizer != null)
+            {
+                // cleanup prior to re-initializing this scenario.
+                speechRecognizer.StateChanged -= SpeechRecognizer_StateChanged;
+
+                this.speechRecognizer.Dispose();
+                this.speechRecognizer = null;
+            }
+            try
+            {
+                // Create an instance of SpeechRecognizer.
+                speechRecognizer = new SpeechRecognizer(recognizerLanguage);
+
+                // Provide feedback to the user about the state of the recognizer.
+                speechRecognizer.StateChanged += SpeechRecognizer_StateChanged;
+                //Add a web search topic constraint to the recognizer.
+                var webSearchGrammar = new SpeechRecognitionTopicConstraint(SpeechRecognitionScenario.WebSearch, "webSearch");
+                speechRecognizer.Constraints.Add(webSearchGrammar);
+                // Compile the constraint.
+                SpeechRecognitionCompilationResult compilationResult = await speechRecognizer.CompileConstraintsAsync();
+                if (compilationResult.Status != SpeechRecognitionResultStatus.Success)
+                {
+                    Microphone.IsEnabled = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                if ((uint)ex.HResult == HResultRecognizerNotFound)
+                {
+                    var messageDialog = new Windows.UI.Popups.MessageDialog("Speech Language pack for selected language not installed.");
+                    await messageDialog.ShowAsync();
+                }
+                else
+                {
+                    var messageDialog = new Windows.UI.Popups.MessageDialog(ex.Message, "Exception");
+                    await messageDialog.ShowAsync();
+                }
+            }
+        }
+
+        private async void SpeechRecognizer_StateChanged(SpeechRecognizer sender, SpeechRecognizerStateChangedEventArgs args)
+        {
+            await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                Debug.WriteLine("Speech recognizer state: " + args.State.ToString());
+            });
         }
 
         private void CameraControl_CameraAspectRatioChanged(object sender, EventArgs e)
@@ -380,7 +475,8 @@ namespace IntelligentKioskSample.Views
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             EnterKioskMode();
-
+            dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
+            initMicrophone();
             if (string.IsNullOrEmpty(SettingsHelper.Instance.EmotionApiKey) || string.IsNullOrEmpty(SettingsHelper.Instance.FaceApiKey))
             {
                 await new MessageDialog("缺少臉部或情緒分析金鑰。請至設定頁面以完成輸入。", "缺乏金鑰").ShowAsync();
@@ -679,6 +775,54 @@ namespace IntelligentKioskSample.Views
 
             tmp.Main.Temp = tmp.Main.Temp - 273.15;
             this.weatherTextBlock.Text = "國家: " + tmp.Sys.Country.ToString() + "\n城市:   "+ tmp.Name.ToString() + "\n氣溫:   " + Math.Round(tmp.Main.Temp,2).ToString() +  "(攝氏)" + "\n濕度:    "  + tmp.Main.Humidity.ToString() + "%";
+        }
+
+        private async void Microphone_Click(object sender, RoutedEventArgs e)
+        {
+            // Disable the UI while recognition is occurring, and provide feedback to the user about current state.
+            Microphone.IsEnabled = false;
+            Debug.WriteLine(" listening for speech...");
+
+            // Start recognition.
+            try
+            {
+                // Save the recognition operation so we can cancel it (as it does not provide a blocking
+                // UI, unlike RecognizeWithAsync()
+                SpeechRecognitionResult speechRecognitionResult = await speechRecognizer.RecognizeAsync();
+                // If successful, display the recognition result. A cancelled task should do nothing.
+                if (speechRecognitionResult.Status == SpeechRecognitionResultStatus.Success)
+                {
+                    Debug.WriteLine(speechRecognitionResult.Text);
+                }
+                else
+                {
+                    Debug.WriteLine("Speech Recognition Failed, Status: {0}", speechRecognitionResult.Status.ToString());
+                }
+            }
+            catch (TaskCanceledException exception)
+            {
+                // TaskCanceledException will be thrown if you exit the scenario while the recognizer is actively
+                // processing speech. Since this happens here when we navigate out of the scenario, don't try to 
+                // show a message dialog for this exception.
+                System.Diagnostics.Debug.WriteLine("TaskCanceledException caught while recognition in progress (can be ignored):");
+                System.Diagnostics.Debug.WriteLine(exception.ToString());
+            }
+            catch (Exception exception)
+            {
+                // Handle the speech privacy policy error.
+                if ((uint)exception.HResult == HResultPrivacyStatementDeclined)
+                {
+                    Debug.WriteLine("The privacy statement was declined.");
+                }
+                else
+                {
+                    var messageDialog = new Windows.UI.Popups.MessageDialog(exception.Message, "Exception");
+                    await messageDialog.ShowAsync();
+                }
+            }
+
+            // Reset UI state.
+            Microphone.IsEnabled = true;
         }
     }
 
