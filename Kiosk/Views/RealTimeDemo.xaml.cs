@@ -40,11 +40,19 @@ using ServiceHelpers;
 using System;
 using System.Diagnostics;
 using System.Text;
-
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.Net.Http;
+
+using Windows.Devices.Enumeration;
+using Windows.Media;
+using Windows.Media.Audio;
+using Windows.Media.Capture;
+using Windows.Media.Devices;
+using Windows.Media.MediaProperties;
+using Windows.Media.Render;
 using Windows.Graphics.Imaging;
 using Windows.UI.Popups;
 using Windows.UI.ViewManagement;
@@ -53,9 +61,11 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Media;
 using Windows.Media.SpeechRecognition;
+using Microsoft.Translator.Samples;
 using Windows.Globalization;
 using Windows.Foundation;
 using WeatherAssignment;
+using IntelligentKioskSample.Views;
 
 #region using for Text to Speech
 using System.IO;
@@ -110,6 +120,9 @@ namespace IntelligentKioskSample.Views
         private ResourceMap speechResourceMap;
         private IAsyncOperation<SpeechRecognitionResult> recognitionOperation;
 
+        private AzureAuthToken tokenProvider;
+        private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "298dcd56035f480f95090b87accadc58";
+
         public static string DeviceName
         {
             get { return deviceName; }
@@ -123,6 +136,7 @@ namespace IntelligentKioskSample.Views
         {
             this.InitializeComponent();
             this.DataContext = this;
+            tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
 
             Window.Current.Activated += CurrentWindowActivationStateChanged;
             this.saveControl.SetRealTimeDataProvider(this);
@@ -862,9 +876,10 @@ namespace IntelligentKioskSample.Views
                 if (speechRecognitionResult.Status == SpeechRecognitionResultStatus.Success)
                 {
                     Debug.WriteLine(speechRecognitionResult.Text);
-                    speechTextBlock.Text = "我聽到你說:" + speechRecognitionResult.Text;
+                    string trad_text = await translate(speechRecognitionResult.Text);
+                    speechTextBlock.Text = "我聽到你說: " + trad_text;
                     //start checking for intents
-                    processSpeech(speechRecognitionResult.Text);
+                    processSpeech(trad_text);
                 }
                 else
                 {
@@ -897,8 +912,38 @@ namespace IntelligentKioskSample.Views
             Microphone.IsEnabled = true;
         }
 
+        private async Task<string> translate(string simpl)
+        {
+            string trad="";
+            using (var webClient = new Windows.Web.Http.HttpClient())
+            {
+                string token = await tokenProvider.GetAccessTokenAsync();
+                string str_uri = string.Format("http://api.microsofttranslator.com/v2/Http.svc/Translate?appid=" + token + "&text=" + simpl + "&from=zh-CHS&to=zh-CHT");
+                var uri = new Uri(str_uri);
+                try
+                {
+                    var result = await webClient.GetStringAsync(uri);
+                    trad = result.ToString();
+                    //remove the tags
+                    int index = trad.IndexOf(">");
+                    if (index > 0)
+                        trad = trad.Substring(index+1, trad.Length-index-1);
+                    index = trad.LastIndexOf("<");
+                    if (index > 0)
+                        trad = trad.Substring(0,index);
+                    return trad;
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Exception {0}.", e.Message);
+                }
+            }
+            return trad;
+        }
+
         private async void processSpeech(string str)
         {
+
             using (var webClient = new Windows.Web.Http.HttpClient())
             {
                 //string ip_address = GetLocalIp();
@@ -911,7 +956,7 @@ namespace IntelligentKioskSample.Views
                     result = JsonConvert.DeserializeObject<LUISobj>(json);
                     if(result.topScoringIntent.score > 0.5)
                     {
-                        Debug.WriteLine(result.topScoringIntent.intent);
+                        //Debug.WriteLine(result.topScoringIntent.intent);
                         switch (result.topScoringIntent.intent)
                         {
                             case "Weather":
@@ -927,6 +972,7 @@ namespace IntelligentKioskSample.Views
                                 saveControl.SavePhoto();
                                 break;
                             case "Emotion":
+                                speechTextBlock.Text = speechTextBlock.Text + "\n\n我會告訴你大家開不開心 =) \n";
                                 break;
                             case "Translate":
                                 speechTextBlock.Text = speechTextBlock.Text + "\n\n我會幫你翻譯! \n";
@@ -937,6 +983,7 @@ namespace IntelligentKioskSample.Views
                     }
                     else
                     {
+                        Debug.WriteLine(result.topScoringIntent.score.ToString());
                         speechTextBlock.Text = speechTextBlock.Text + "\n\n對不起，我不明白你在說什麼，麻煩你換個方式再說一遍。\n";
                     }
                 }
