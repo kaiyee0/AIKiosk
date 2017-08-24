@@ -75,6 +75,7 @@ using CognitiveServicesTTS;
 using Windows.UI.Core;
 using Windows.Media.SpeechSynthesis;
 using Windows.ApplicationModel.Resources.Core;
+using Windows.ApplicationModel.Core;
 #endregion
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -993,6 +994,30 @@ namespace IntelligentKioskSample.Views
                     // Details in ex.Message and ex.HResult.       
                 }
             }
+        }
+
+        private async void window_Click(object sender, RoutedEventArgs e)
+        {
+            CoreApplicationView newCoreView = CoreApplication.CreateNewView();
+
+            ApplicationView newAppView = null;
+            int mainViewId = ApplicationView.GetApplicationViewIdForWindow(
+              CoreApplication.MainView.CoreWindow);
+
+            await newCoreView.Dispatcher.RunAsync(
+              CoreDispatcherPriority.Normal,
+              () =>
+              {
+                  newAppView = ApplicationView.GetForCurrentView();
+                  Window.Current.Content = new MainPage1();
+                  Window.Current.Activate();
+              });
+
+            await ApplicationViewSwitcher.TryShowAsStandaloneAsync(
+              newAppView.Id,
+              ViewSizePreference.UseHalf,
+              mainViewId,
+              ViewSizePreference.UseHalf);
         }
     }
 
