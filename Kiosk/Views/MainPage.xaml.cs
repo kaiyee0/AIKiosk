@@ -28,6 +28,7 @@ using System.Net.Http;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using IntelligentKioskSample.Views;
+using System.Diagnostics;
 
 /// <summary>
 /// 
@@ -47,6 +48,7 @@ namespace IntelligentKioskSample.Views
         public MainPage()
         {
             this.InitializeComponent();
+            Initialise();
             this.ViewModel = new ResultViewModel();
             this.speechTranlateClient = new SpeechTranslateClient(AzureSecretKey);
         }
@@ -57,6 +59,7 @@ namespace IntelligentKioskSample.Views
         /// <param name="e"></param>
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
+            Debug.WriteLine("Navigate");
             foreach (var device in await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector()))
             {
                 this.micBox.Items.Add(device);
@@ -99,6 +102,50 @@ namespace IntelligentKioskSample.Views
             this.toComboBox.SelectedIndex = 0;
         }
 
+        private async void Initialise()
+        {
+            Debug.WriteLine("Navigate");
+            foreach (var device in await DeviceInformation.FindAllAsync(MediaDevice.GetAudioCaptureSelector()))
+            {
+                this.micBox.Items.Add(device);
+            }
+
+            foreach (var device in await DeviceInformation.FindAllAsync(MediaDevice.GetAudioRenderSelector()))
+            {
+                this.speakerBox.Items.Add(device);
+            }
+
+            this.micBox.SelectedIndex = 0;
+            this.speakerBox.SelectedIndex = 0;
+
+            using (var httpClient = new HttpClient())
+            {
+                var response = await httpClient.GetAsync("https://dev.microsofttranslator.com/languages?api-version=1.0&scope=text,tts,speech");
+                // add header
+                response.EnsureSuccessStatusCode();
+                var jsonString = await response.Content.ReadAsStringAsync();
+                dynamic jsonObject = JObject.Parse(jsonString);
+                foreach (var s in jsonObject.speech)
+                {
+                    this.fromComboBox.Items.Add(new ComboBoxItem() { Name = s.Name, Content = s.Value.name });
+                }
+                foreach (var s in jsonObject.text)
+                {
+                    this.toComboBox.Items.Add(new ComboBoxItem() { Name = s.Name, Content = s.Value.name });
+                }
+                foreach (var s in jsonObject.tts)
+                {
+                    string lang = s.Value.language;
+                    if (!langVoiceDict.ContainsKey(lang))
+                        langVoiceDict[lang] = new List<ComboBoxItem>();
+
+                    langVoiceDict[lang].Add(new ComboBoxItem() { Name = s.Name, Content = String.Format("{0} ({1}) ({2})", s.Value.displayName, s.Value.gender, s.Value.regionName) });
+                }
+            }
+
+            this.fromComboBox.SelectedIndex = 0;
+            this.toComboBox.SelectedIndex = 0;
+        }
         /// <summary>
         /// Connect to the Machine Translation Service and Construct the Audio Graph
         /// </summary>
