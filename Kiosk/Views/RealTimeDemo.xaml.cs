@@ -977,6 +977,7 @@ namespace IntelligentKioskSample.Views
                                 break;
                             case "Translate":
                                 speechTextBlock.Text = speechTextBlock.Text + "\n\n我會幫你翻譯! \n";
+                                Open_translate_window();
                                 break;
                             default:
                                 break;
@@ -996,7 +997,7 @@ namespace IntelligentKioskSample.Views
             }
         }
 
-        private async void window_Click(object sender, RoutedEventArgs e)
+        private async void Open_translate_window()
         {
             CoreApplicationView newCoreView = CoreApplication.CreateNewView();
 
