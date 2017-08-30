@@ -41,7 +41,7 @@ namespace IntelligentKioskSample.Views
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        const string AzureSecretKey = "[Enter your Client Secret here]";
+        const string AzureSecretKey = "a56c3879192e442aaf1c7542244f8aeb";
 
         private Dictionary<string, List<ComboBoxItem>> langVoiceDict = new Dictionary<string, List<ComboBoxItem>>();
 
