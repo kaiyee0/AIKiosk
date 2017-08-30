@@ -114,6 +114,9 @@
     </Compile>
     <Compile Include="AzureIoTHub.cs" />
     <Compile Include="AzureAuthToken.cs" />
+    <Compile Include="Views\MainPage.xaml.cs">
+      <DependentUpon>MainPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\SpeechTranslateClient.cs" />
     <Compile Include="Views\ResultViewModel.cs" />
     <Compile Include="Controls\Converters.cs" />
@@ -379,6 +382,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\GreetingKiosk.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

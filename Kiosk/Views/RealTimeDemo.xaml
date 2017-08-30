@@ -62,7 +62,7 @@
                             請在點擊錄音後說話。
                         </TextBlock>
                         <Button Background="#FF262626" x:Name="weather" Content="Weather" HorizontalAlignment="Center" VerticalAlignment="Center" Click="weather_Click" RenderTransformOrigin="18.969,-0.094" Margin="10,0,10,5" FontSize="25" Visibility="Collapsed" />
-                        <Button Background="#FF262626" x:Name="newWindow" Content="newWindow" HorizontalAlignment="Center" VerticalAlignment="Center" Click="window_Click" RenderTransformOrigin="18.969,-0.094" Margin="10,50,10,5" FontSize="25" Visibility="Collapsed"/>
+                        <Button Background="#FF262626" x:Name="newWindow" Content="newWindow" HorizontalAlignment="Center" VerticalAlignment="Center" Click="window_Click" RenderTransformOrigin="18.969,-0.094" Margin="10,50,10,5" FontSize="25" Visibility="Visible"/>
                         <TextBlock x:Name="weatherTextBlock" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="10,0,0,0" FontSize="20" Visibility="Collapsed"/>
                         <TextBlock x:Name="otherTextBlock" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0" FontSize="20" Visibility="Visible" Grid.Row="3"/>
                     </Grid>

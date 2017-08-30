@@ -1009,7 +1009,7 @@ namespace IntelligentKioskSample.Views
               () =>
               {
                   newAppView = ApplicationView.GetForCurrentView();
-                  Window.Current.Content = new MainPage1();
+                  Window.Current.Content = new MainPage();
                   Window.Current.Activate();
               });
 
