@@ -175,6 +175,12 @@ namespace IntelligentKioskSample
                 this.DeviceName = value.ToString();
             }
 
+            value = ApplicationData.Current.RoamingSettings.Values["BingSpeechKey"];
+            if (value != null)
+            {
+                this.BingSpeechKey = value.ToString();
+            }
+
             value = ApplicationData.Current.RoamingSettings.Values["CameraName"];
             if (value != null)
             {
@@ -366,6 +372,17 @@ namespace IntelligentKioskSample
             {
                 this.devicename = value;
                 this.OnSettingChanged("DeviceName", value);
+            }
+        }
+        
+        private string bingSpeechKey = string.Empty;
+        public string BingSpeechKey
+        {
+            get { return bingSpeechKey; }
+            set
+            {
+                this.bingSpeechKey = value;
+                this.OnSettingChanged("BingSpeechKey", value);
             }
         }
 

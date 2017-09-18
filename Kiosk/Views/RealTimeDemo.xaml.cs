@@ -107,12 +107,13 @@ namespace IntelligentKioskSample.Views
         private int last_latency;
         private int cur_latency;
         private static string deviceName;
+        private static string bingSpeechKey;
 
         bool GreetVisitor;
 
         private SpeechSynthesizer synthesizer;
-
-        Authentication auth = new Authentication("475623a6b9fc456d904015983b13ba40");
+        //888f71f5b4614aeab44072a9a72a568b
+        //Authentication auth = new Authentication(bingSpeechKey);
         Synthesize cortana = new Synthesize();
 
         private SpeechRecognizer speechRecognizer;
@@ -133,12 +134,21 @@ namespace IntelligentKioskSample.Views
             }
         }
 
+        public static string BingSpeechKey
+        {
+            get { return bingSpeechKey; }
+            set
+            {
+                bingSpeechKey = value;
+            }
+        }
+
         public RealTimeDemo()
         {
             this.InitializeComponent();
             this.DataContext = this;
             tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
-
+            Authentication auth = new Authentication(bingSpeechKey);
             Window.Current.Activated += CurrentWindowActivationStateChanged;
             this.saveControl.SetRealTimeDataProvider(this);
             this.saveControl.FilterOutSmallFaces = true;
