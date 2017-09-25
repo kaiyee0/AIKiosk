@@ -108,7 +108,7 @@ namespace IntelligentKioskSample.Views
         private int cur_latency;
         private static string deviceName;
         private static string bingSpeechKey;
-
+        private static string text_translation_api;
         bool GreetVisitor;
 
         private SpeechSynthesizer synthesizer;
@@ -123,7 +123,7 @@ namespace IntelligentKioskSample.Views
         private IAsyncOperation<SpeechRecognitionResult> recognitionOperation;
 
         private AzureAuthToken tokenProvider;
-        private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "298dcd56035f480f95090b87accadc58";
+        //private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "298dcd56035f480f95090b87accadc58";
 
         public static string DeviceName
         {
@@ -143,12 +143,22 @@ namespace IntelligentKioskSample.Views
             }
         }
 
+        //private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "298dcd56035f480f95090b87accadc58";
+        public static string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY
+        {
+            get { return text_translation_api; }
+            set
+            {
+                text_translation_api = value;
+            }
+        }
+
         public RealTimeDemo()
         {
             this.InitializeComponent();
             this.DataContext = this;
-            tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
-            Authentication auth = new Authentication(bingSpeechKey);
+            //tokenProvider = new AzureAuthToken(text_translation_api);
+            //Authentication auth = new Authentication(bingSpeechKey);
             Window.Current.Activated += CurrentWindowActivationStateChanged;
             this.saveControl.SetRealTimeDataProvider(this);
             this.saveControl.FilterOutSmallFaces = true;
@@ -191,6 +201,24 @@ namespace IntelligentKioskSample.Views
                 var messageDialog = new Windows.UI.Popups.MessageDialog(exception.Message, "Exception");
                 await messageDialog.ShowAsync();
                 Microphone.IsEnabled = false;
+            }
+            try
+            {
+                tokenProvider = new AzureAuthToken(text_translation_api);
+            }
+            catch
+            {
+                var messageDialog = new Windows.UI.Popups.MessageDialog("text_translation_api error ! \n Go to Setting Page to check");
+                await messageDialog.ShowAsync();
+            }
+            try
+            {
+                Authentication auth = new Authentication(bingSpeechKey);
+            }
+            catch
+            {
+                var messageDialog = new Windows.UI.Popups.MessageDialog("bingSpeechKey error ! \n Please check if the API Key is wrong."); 
+                await messageDialog.ShowAsync();
             }
         }
 

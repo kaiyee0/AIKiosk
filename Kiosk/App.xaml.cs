@@ -94,6 +94,7 @@ namespace IntelligentKioskSample
                     BingSearchHelper.AutoSuggestionApiKey = SettingsHelper.Instance.BingAutoSuggestionApiKey;
                     TextAnalyticsHelper.ApiKey = SettingsHelper.Instance.TextAnalyticsKey;
                     RealTimeDemo.BingSpeechKey = SettingsHelper.Instance.BingSpeechKey;
+                    RealTimeDemo.TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = SettingsHelper.Instance.TextTranslationAPIKey;
                     RealTimeDemo.DeviceName = SettingsHelper.Instance.DeviceName;
                     ImageAnalyzer.PeopleGroupsUserDataFilter = SettingsHelper.Instance.WorkspaceKey;
                     FaceListManager.FaceListsUserDataFilter = SettingsHelper.Instance.WorkspaceKey;

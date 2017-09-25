@@ -181,6 +181,11 @@ namespace IntelligentKioskSample
                 this.BingSpeechKey = value.ToString();
             }
 
+            value = ApplicationData.Current.RoamingSettings.Values["TextTranslationAPIKey"];
+            if (value != null)
+            {
+                this.TextTranslationAPIKey = value.ToString();
+            }
             value = ApplicationData.Current.RoamingSettings.Values["CameraName"];
             if (value != null)
             {
@@ -383,6 +388,17 @@ namespace IntelligentKioskSample
             {
                 this.bingSpeechKey = value;
                 this.OnSettingChanged("BingSpeechKey", value);
+            }
+        }
+
+        private string textTranslationAPIKey = string.Empty;
+        public string TextTranslationAPIKey
+        {
+            get { return textTranslationAPIKey; }
+            set
+            {
+                this.textTranslationAPIKey = value;
+                this.OnSettingChanged("TextTranslationAPIKey", value);
             }
         }
 
