@@ -107,12 +107,13 @@ namespace IntelligentKioskSample.Views
         private int last_latency;
         private int cur_latency;
         private static string deviceName;
-
+        private static string bingSpeechKey;
+        private static string text_translation_api;
         bool GreetVisitor;
 
         private SpeechSynthesizer synthesizer;
-
-        Authentication auth = new Authentication("475623a6b9fc456d904015983b13ba40");
+        //888f71f5b4614aeab44072a9a72a568b
+        //Authentication auth = new Authentication(bingSpeechKey);
         Synthesize cortana = new Synthesize();
 
         private SpeechRecognizer speechRecognizer;
@@ -122,7 +123,7 @@ namespace IntelligentKioskSample.Views
         private IAsyncOperation<SpeechRecognitionResult> recognitionOperation;
 
         private AzureAuthToken tokenProvider;
-        private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "298dcd56035f480f95090b87accadc58";
+        //private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "298dcd56035f480f95090b87accadc58";
 
         public static string DeviceName
         {
@@ -133,12 +134,31 @@ namespace IntelligentKioskSample.Views
             }
         }
 
+        public static string BingSpeechKey
+        {
+            get { return bingSpeechKey; }
+            set
+            {
+                bingSpeechKey = value;
+            }
+        }
+
+        //private const string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY = "298dcd56035f480f95090b87accadc58";
+        public static string TEXT_TRANSLATION_API_SUBSCRIPTION_KEY
+        {
+            get { return text_translation_api; }
+            set
+            {
+                text_translation_api = value;
+            }
+        }
+
         public RealTimeDemo()
         {
             this.InitializeComponent();
             this.DataContext = this;
-            tokenProvider = new AzureAuthToken(TEXT_TRANSLATION_API_SUBSCRIPTION_KEY);
-
+            //tokenProvider = new AzureAuthToken(text_translation_api);
+            //Authentication auth = new Authentication(bingSpeechKey);
             Window.Current.Activated += CurrentWindowActivationStateChanged;
             this.saveControl.SetRealTimeDataProvider(this);
             this.saveControl.FilterOutSmallFaces = true;
@@ -181,6 +201,24 @@ namespace IntelligentKioskSample.Views
                 var messageDialog = new Windows.UI.Popups.MessageDialog(exception.Message, "Exception");
                 await messageDialog.ShowAsync();
                 Microphone.IsEnabled = false;
+            }
+            try
+            {
+                tokenProvider = new AzureAuthToken(text_translation_api);
+            }
+            catch
+            {
+                var messageDialog = new Windows.UI.Popups.MessageDialog("text_translation_api error ! \n Go to Setting Page to check");
+                await messageDialog.ShowAsync();
+            }
+            try
+            {
+                Authentication auth = new Authentication(bingSpeechKey);
+            }
+            catch
+            {
+                var messageDialog = new Windows.UI.Popups.MessageDialog("bingSpeechKey error ! \n Please check if the API Key is wrong."); 
+                await messageDialog.ShowAsync();
             }
         }
 
