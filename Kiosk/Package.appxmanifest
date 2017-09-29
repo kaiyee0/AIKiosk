@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" IgnorableNamespaces="uap mp">
-  <Identity Name="NDHUCognitive" Publisher="CN=Kiosk" Version="2.0.7.0" />
+  <Identity Name="NTUCognitive" Publisher="CN=Kiosk" Version="2.0.9.0" />
   <mp:PhoneIdentity PhoneProductId="bdf9127b-7e32-469b-a6ed-f57a0a80ae23" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
   <Properties>
-    <DisplayName>NDHUCognitive</DisplayName>
+    <DisplayName>NTUCognitive</DisplayName>
     <PublisherDisplayName>I-planet</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -14,8 +14,8 @@
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="NDHUCognitive.App">
-      <uap:VisualElements DisplayName="NDHU Cognitive Service" Square44x44Logo="Assets\squaretile-sdk-44.png" Square150x150Logo="Assets\squaretile-sdk.png" Description="NDHU Cognitive Service" BackgroundColor="#00B2F0">
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="NTUCognitive.App">
+      <uap:VisualElements DisplayName="NTU Cognitive Service" Square44x44Logo="Assets\squaretile-sdk-44.png" Square150x150Logo="Assets\squaretile-sdk.png" Description="NTU Cognitive Service" BackgroundColor="#00B2F0">
         <uap:SplashScreen Image="Assets\splash-sdk.png" BackgroundColor="#00B2F0" />
         <uap:InitialRotationPreference>
           <uap:Rotation Preference="landscape" />
