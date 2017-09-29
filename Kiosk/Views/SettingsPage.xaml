@@ -70,12 +70,16 @@
 
                     <PasswordBox Header="Text Analytics Key" Password="{Binding TextAnalyticsKey, Mode=TwoWay}" Margin="0,10,0,0"/>
 
-                    <PasswordBox Header="Bing Speech API Key" Password="{Binding BingSpeechKey, Mode=TwoWay}" Margin="0,10,0,0"/>
-
                     <PasswordBox Header="Text Translation API Key" Password="{Binding TextTranslationAPIKey, Mode=TwoWay}" Margin="0,10,0,0"/>
 
-                    <TextBox Header="Device Name" Text="{Binding DeviceName, Mode=TwoWay}" />
 
+                    <TextBox Header="Device Name" Text="{Binding DeviceName, Mode=TwoWay}" />
+                    
+                    <TextBox Header="IoT Hub Host" Text="{Binding IoTHubHost, Mode=TwoWay}" />
+
+                    <TextBox Header="IoT Hub Device Id" Text="{Binding IoTHubDeviceId, Mode=TwoWay}" />
+                    
+                    <PasswordBox Header="IoT Hub Device Key" Password="{Binding IoTHubKey, Mode=TwoWay}" />
                 </StackPanel>
 
                 <StackPanel Margin="0,66,0,0">

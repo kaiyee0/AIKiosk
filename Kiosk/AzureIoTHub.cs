@@ -9,7 +9,7 @@ static class AzureIoTHub
     // Note: this connection string is specific to the device "Kiosk". To configure other devices,
     // see information on iothub-explorer at http://aka.ms/iothubgetstartedVSCS
     //
-    const string deviceConnectionString = "HostName=CognitiveHub.azure-devices.net;DeviceId=Kiosk;SharedAccessKey=uW0L6l8fFgpvYEUSv2nAH1Y+tbEGXJjoms5XqCz2eGg=";
+    //const string deviceConnectionString = "HostName=CognitiveHub.azure-devices.net;DeviceId=Kiosk;SharedAccessKey=uW0L6l8fFgpvYEUSv2nAH1Y+tbEGXJjoms5XqCz2eGg=";
 
     //
     // To monitor messages sent to device "Kiosk" use iothub-explorer as follows:
@@ -17,9 +17,44 @@ static class AzureIoTHub
     //
 
     // Refer to http://aka.ms/azure-iot-hub-vs-cs-wiki for more information on Connected Service for Azure IoT Hub
+    private static string ioTHubHost;
+    private static string ioTHubDeviceId;
+    private static string ioTHubKey;
+    private static string deviceConnectionString = "HostName=" + ioTHubHost + ";DeviceId=" + ioTHubDeviceId + ";SharedAccessKey=" + ioTHubKey;
+
+    public static string IoTHubHost
+    {
+       get { return ioTHubHost; }
+       set
+       {
+           ioTHubHost = value;
+           deviceConnectionString = "HostName=" + ioTHubHost + ";DeviceId=" + ioTHubDeviceId + ";SharedAccessKey=" + ioTHubKey;
+       }
+    }
+      public static string IoTHubDeviceId
+      {
+          get { return ioTHubDeviceId; }
+          set
+          {
+              ioTHubDeviceId = value;
+                deviceConnectionString = "HostName=" + ioTHubHost + ";DeviceId=" + ioTHubDeviceId + ";SharedAccessKey=" + ioTHubKey;
+          }
+     }
+       
+  
+      public static string IoTHubKey
+      {
+          get { return ioTHubKey; }
+         set
+        {
+            ioTHubKey = value;
+            deviceConnectionString = "HostName=" + ioTHubHost + ";DeviceId=" + ioTHubDeviceId + ";SharedAccessKey=" + ioTHubKey;
+         }
+     }
 
     public static async Task SendDeviceToCloudMessageAsync()
     {
+        deviceConnectionString = "HostName=" + ioTHubHost + ";DeviceId=" + ioTHubDeviceId + ";SharedAccessKey=" + ioTHubKey;
         var deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Amqp);
 
 #if WINDOWS_UWP
@@ -34,6 +69,7 @@ static class AzureIoTHub
 
     public static async Task SendSQLToCloudMessageAsync(string str)
     {
+        deviceConnectionString = "HostName=" + ioTHubHost + ";DeviceId=" + ioTHubDeviceId + ";SharedAccessKey=" + ioTHubKey;
         var deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Amqp);
         var message = new Message(Encoding.ASCII.GetBytes(str));
         await deviceClient.SendEventAsync(message);
@@ -41,6 +77,7 @@ static class AzureIoTHub
 
     public static async Task<string> ReceiveCloudToDeviceMessageAsync()
     {
+        deviceConnectionString = "HostName=" + ioTHubHost + ";DeviceId=" + ioTHubDeviceId + ";SharedAccessKey=" + ioTHubKey;
         var deviceClient = DeviceClient.CreateFromConnectionString(deviceConnectionString, TransportType.Amqp);
 
         while (true)

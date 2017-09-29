@@ -211,7 +211,7 @@ namespace IntelligentKioskSample.Views
                 var messageDialog = new Windows.UI.Popups.MessageDialog("text_translation_api error ! \n Go to Setting Page to check");
                 await messageDialog.ShowAsync();
             }
-            try
+            /*try
             {
                 Authentication auth = new Authentication(bingSpeechKey);
             }
@@ -219,7 +219,7 @@ namespace IntelligentKioskSample.Views
             {
                 var messageDialog = new Windows.UI.Popups.MessageDialog("bingSpeechKey error ! \n Please check if the API Key is wrong."); 
                 await messageDialog.ShowAsync();
-            }
+            }*/
         }
 
         private async Task InitializeRecognizer(Language recognizerLanguage)

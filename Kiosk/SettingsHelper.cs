@@ -175,12 +175,6 @@ namespace IntelligentKioskSample
                 this.DeviceName = value.ToString();
             }
 
-            value = ApplicationData.Current.RoamingSettings.Values["BingSpeechKey"];
-            if (value != null)
-            {
-                this.BingSpeechKey = value.ToString();
-            }
-
             value = ApplicationData.Current.RoamingSettings.Values["TextTranslationAPIKey"];
             if (value != null)
             {
@@ -223,14 +217,28 @@ namespace IntelligentKioskSample
             }
 
             value = ApplicationData.Current.RoamingSettings.Values["DriverMonitoringYawningThreshold"];
-            if (value != null)
-            {
+            if (value != null){
                 double threshold;
                 if (double.TryParse(value.ToString(), out threshold))
                 {
                     this.DriverMonitoringYawningThreshold = threshold;
                 }
             }
+            value = ApplicationData.Current.RoamingSettings.Values["IoTHubHost"];
+            if (value != null){
+                this.IoTHubHost = value.ToString();
+            }
+            
+            value = ApplicationData.Current.RoamingSettings.Values["IoTHubDeviceId"];
+            if (value != null){
+                this.IoTHubDeviceId = value.ToString();
+            }
+           
+            value = ApplicationData.Current.RoamingSettings.Values["IoTHubKey"];
+            if (value != null){
+                this.IoTHubKey = value.ToString();
+            }
+           
 
             // load mall kiosk demo custom settings from file as the content is too big to be saved as a string-like setting
             try
@@ -379,17 +387,6 @@ namespace IntelligentKioskSample
                 this.OnSettingChanged("DeviceName", value);
             }
         }
-        
-        private string bingSpeechKey = string.Empty;
-        public string BingSpeechKey
-        {
-            get { return bingSpeechKey; }
-            set
-            {
-                this.bingSpeechKey = value;
-                this.OnSettingChanged("BingSpeechKey", value);
-            }
-        }
 
         private string textTranslationAPIKey = string.Empty;
         public string TextTranslationAPIKey
@@ -434,6 +431,39 @@ namespace IntelligentKioskSample
                 this.OnSettingChanged("ShowDebugInfo", value);
             }
         }
+
+        private string ioTHubHost = string.Empty;
+          public string IoTHubHost
+          {
+              get { return this.ioTHubHost; }
+              set
+              {
+                  this.ioTHubHost = value;
+                  this.OnSettingChanged("IoTHubHost", value);
+              }
+          }
+  
+          private string ioTHubDeviceId = string.Empty;
+          public string IoTHubDeviceId
+          {
+              get { return this.ioTHubDeviceId; }
+              set
+             {
+                 this.ioTHubDeviceId = value;
+                 this.OnSettingChanged("IoTHubDeviceId", value);
+             }
+         }
+ 
+         private string ioTHubKey = string.Empty;
+         public string IoTHubKey
+         {
+             get { return this.ioTHubKey; }
+             set
+             {
+                 this.ioTHubKey = value;
+                 this.OnSettingChanged("IoTHubKey", value);
+             }
+         }
 
         private double driverMonitoringSleepingThreshold = RealtimeDriverMonitoring.DefaultSleepingApertureThreshold;
         public double DriverMonitoringSleepingThreshold
